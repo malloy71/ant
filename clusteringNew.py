@@ -179,14 +179,14 @@ def updateAnt():
         ant.updateInformation(ant_fitnessSum)
 
 
-if __name__ == '__main__':
+def run():
     # 加载数据集
     iris = load_iris()
-
+    global row, col, tempAnt
     data_shape = np.shape(iris.data)
     row = data_shape[0]
     col = data_shape[1]
-
+    result = []
     for k in range(interation):
         # 初始化(第一次迭代，创建蚁群)
         if k == 0:
@@ -232,5 +232,11 @@ if __name__ == '__main__':
         for ant in antGroup:
             if (ant.fitness < perfect_ant.fitness):
                 perfect_ant = ant
-        print("第", k, "轮迭代----------")
+        # print("第", k, "轮迭代----------")
         print(perfect_ant.row_max)
+        result = perfect_ant.row_max
+    return result;
+
+
+if __name__ == '__main__':
+    run()
