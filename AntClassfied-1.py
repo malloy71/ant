@@ -10,7 +10,7 @@ SAMPLE_NUM = 50  # 样本数量
 FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-ITERATE_NUM = 100 # 迭代次数
+ITERATE_NUM = 100  # 迭代次数
 
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
@@ -33,6 +33,8 @@ t_ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]  # �
 聚类中心点
 """
 center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
+
+
 
 """
 当前轮次蚂蚁的目标函数值，前者是蚂蚁编号、后者是目标函数值
@@ -59,9 +61,50 @@ def _init_test_data():
     """
     将前两个样本作为聚类中心点的初始值
     """
+    # original_init_center()
+    pick_center_by_density()
+
+# 随机选取两个中心点
+def original_init_center():
     for i in range(0, CLASS_NUM):
         center_array[i][0] = sample[random.randint(0, SAMPLE_NUM - 1)][0]
         center_array[i][1] = sample[random.randint(0, SAMPLE_NUM - 1)][1]
+
+# 根据密度选取中心点
+def pick_center_by_density():
+    # 半径
+    r = 3
+    density_arr = [0 for col in range(SAMPLE_NUM)]
+    for i in range(SAMPLE_NUM):
+        for j in range(SAMPLE_NUM):
+            if i == j:
+                continue
+            dis = cal_dis(sample[i], sample[j])
+            if dis <= r:
+                density_arr[i] += 1
+
+    print(density_arr)
+    for i in range(0, CLASS_NUM):
+        max_index = findMax(density_arr)
+        center_array[i][0] = sample[max_index][0]
+        center_array[i][1] = sample[max_index][1]
+
+    print(center_array)
+
+def cal_dis(param, param1):
+    x1 = param[0]
+    y1 = param[1]
+    x2 = param1[0]
+    y2 = param1[1]
+    return math.sqrt(math.pow(x1-x2,2)+math.pow(y1-y2,2))
+
+def findMax(density_arr):
+    index = 0
+    for i in range(len(density_arr)):
+        if density_arr[i] > density_arr[index]:
+            index = i
+    density_arr[index] = 0
+    return index
 
 
 def _get_best_class_by_tao_value(sampleid):
