@@ -21,7 +21,7 @@ sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, cent
 信息素矩阵
 """
 tao_array = [[random.random() for col in range(FEATURE_NUM)] for row in range(SAMPLE_NUM)]
-
+# 1234
 """
 蚁群解集
 """
