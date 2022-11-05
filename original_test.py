@@ -1,24 +1,20 @@
-
-import math
-import operator
-import random
-import threading
-import time
-
-import matplotlib.pyplot as plt
+# 蚁群聚类：原始链接https://blog.csdn.net/Fredric_2014/article/details/85167556
 import numpy as np
 import sklearn.datasets as ds
+import matplotlib.pyplot as plt
+import random
+import math
+import operator
 
 SAMPLE_NUM = 50  # 样本数量
 FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-ITERATE_NUM = 200  # 迭代次数
 
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
+# sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
 
 """
 信息素矩阵
@@ -37,21 +33,19 @@ t_ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]  # �
 """
 center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
 
-
-
 """
 当前轮次蚂蚁的目标函数值，前者是蚂蚁编号、后者是目标函数值
 """
 ant_target = [(0, 0) for col in range(ANT_NUM)]
 
 change_q = 0.3  # 更新蚁群时的转换规则参数，表示何种比例直接根据信息素矩阵进行更新
-L = int(ANT_NUM/5)  # 局部搜索的蚂蚁数量
-change_jp = 0.3  # 局部搜索时该样本是否变动
+L = 2  # 局部搜索的蚂蚁数量
+change_jp = 0.03  # 局部搜索时该样本是否变动
 change_rho = 0.02  # 挥发参数
 Q = 0.1  # 信息素浓度参数
 
 
-def _init_test_data(r):
+def _init_test_data(data,res):
     """
     初始化蚁群解集，随机确认每只蚂蚁下每个样本的分类为1或者0
     """
@@ -64,48 +58,9 @@ def _init_test_data(r):
     """
     将前两个样本作为聚类中心点的初始值
     """
-    # original_init_center()
-    pick_center_by_density(r)
-
-# 随机选取两个中心点
-def original_init_center():
     for i in range(0, CLASS_NUM):
         center_array[i][0] = sample[random.randint(0, SAMPLE_NUM - 1)][0]
         center_array[i][1] = sample[random.randint(0, SAMPLE_NUM - 1)][1]
-
-# 改动点1：根据密度选取中心点
-def pick_center_by_density(r):
-    # 半径
-    # r = 2
-    density_arr = [0 for col in range(SAMPLE_NUM)]
-    for i in range(SAMPLE_NUM):
-        for j in range(SAMPLE_NUM):
-            if i == j:
-                continue
-            dis = cal_dis(sample[i], sample[j])
-            if dis <= r:
-                density_arr[i] += 1
-
-    for i in range(0, CLASS_NUM):
-        max_index = findMax(density_arr)
-        center_array[i][0] = sample[max_index][0]
-        center_array[i][1] = sample[max_index][1]
-
-
-def cal_dis(param, param1):
-    x1 = param[0]
-    y1 = param[1]
-    x2 = param1[0]
-    y2 = param1[1]
-    return math.sqrt(math.pow(x1-x2,2)+math.pow(y1-y2,2))
-
-def findMax(density_arr):
-    index = 0
-    for i in range(len(density_arr)):
-        if density_arr[i] > density_arr[index]:
-            index = i
-    density_arr[index] = 0
-    return index
 
 
 def _get_best_class_by_tao_value(sampleid):
@@ -309,145 +264,39 @@ def _update_tau_array():
 
     # print(np.var(tao_array))
 
-def _global_search():
-    temp_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]
-    # 禁忌表，在同一轮迭代中，交换过的蚂蚁，不能再次交换
-    taboo = []
-    for i in range(int(ANT_NUM/2)):
-        peek_ant1 = 0
-        peek_ant2 = 0
-        # 交换index1只蚂蚁与index2只蚂蚁特定位置上的值
-        while peek_ant1 == peek_ant2 or peek_ant1 in taboo or peek_ant2 in taboo:
-            peek_ant1 = random.randint(0, ANT_NUM - 1)
-            peek_ant2 = random.randint(0, ANT_NUM - 1)
-        # 将已交换的蚂蚁加入禁忌表中
-        taboo.append(peek_ant1)
-        taboo.append(peek_ant2)
-        temp_1 = ant_array[peek_ant1]
-        temp_2 = ant_array[peek_ant2]
 
-        for j in range(int(SAMPLE_NUM/10)):
-            index = random.randint(0, SAMPLE_NUM - 1)
-            temp_1[index], temp_2[index] = temp_2[index], temp_1[index]
-        temp_array[peek_ant1] = temp_1
-        temp_array[peek_ant2] = temp_2
+"""
+说明：
 
-    for ant_id in taboo:
-        target_value = 0
-        # 判断是否保留这个临时解
-        for j in range(0, SAMPLE_NUM):
+简单蚁群算法解决聚类问题，参考笔记《蚁群算法-聚类算法》
 
-            if t_ant_array[ant_id][j] == 0:
+作者：fredric
 
-                # 与分类0的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
-                target_value += math.sqrt(f1 + f2)
+日期：2018-12-21
 
-            else:
-                # 与分类1的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
-                target_value += math.sqrt(f1 + f2)
-
-        if target_value < ant_target[i][1]:
-            # 更新最优解
-            ant_array[ant_id] = temp_array[ant_id]
-
-
-from sklearn.cluster import KMeans
-import original_test
-from sklearn.metrics import precision_score
-
-def run_batch(r):
-    _init_test_data(r)
-
-    for i in range(0, ITERATE_NUM):
-        _update_ant()
-        _global_search()
-        _local_search()
-
-        _update_tau_array()
-
-    # 结果集
-    pre = ant_array[ant_target[0][0]]
-    optimizeAntRes = precision_score(target_classify, pre)
-
-
-    if (optimizeAntRes > 0.9):
-        print("--------------------important!!!!"+"Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
-    else:
-        print("Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
-
-if __name__ == "__main__":
+"""
 
 
 
-    # r = 1.5
-    # while (r<5):
-    #     run_batch(r)
-    #     r += 0.1
+def run(data,res):
 
+    global sample
+    sample = data
+    global target_classify
+    target_classify= res
+    _init_test_data(data,res);
 
-    # i=0
-    # while(i<10):
-    #     print("=======batch:"+str(i))
-    #     run_batch(1.6)
-    #     run_batch(2.5)
-    #     run_batch(3.1)
-    #     run_batch(2.9)
-    #     i+=1
-
-    r=2.5
-    _init_test_data(r)
-
-    for i in range(0, ITERATE_NUM):
+    for i in range(0, 100):
         # print("iterate No. {} target {}".format(i, ant_target[0][1]))
 
         _update_ant()
-        _global_search()
+
         _local_search()
 
         _update_tau_array()
 
-    # 结果集
+    # 画出分类
     pre = ant_array[ant_target[0][0]]
-    optimizeAntRes = precision_score(target_classify, pre)
 
-    plt.figure(figsize=(10, 10), facecolor='w')
-    plt.subplot(221)
-    plt.title('origin classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=20, edgecolors='none')
-
-    plt.subplot(222)
-    plt.title('ant classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=20, edgecolors='none')
-
-    plt.plot(center_array[0][0], center_array[0][1], 'ro')
-    plt.plot(center_array[1][0], center_array[1][1], 'bo')
-
-    tmp_case, temp_target = ds.make_blobs(100, n_features=2, centers=2, random_state=8)
-
-    model = KMeans(n_clusters=2)
-    model.fit(tmp_case)
-    km_res = model.predict(sample)
-    plt.subplot(223)
-    plt.title('KMeans classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
-
-    original_res = original_test.run(sample, target_classify)
-    plt.subplot(224)
-    plt.title('no update ant')
-    plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
-
-    optimizeAntRes = precision_score(target_classify,pre)
-    unOptimizeAntRes = precision_score(target_classify,original_res)
-    print("优化后准确率：")
-    print(optimizeAntRes)
-    print("不优化准确率：")
-    print(unOptimizeAntRes)
-
-    plt.show()
-
-
+    return pre
 

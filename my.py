@@ -14,7 +14,7 @@ ANT_NUM = 200  # 蚂蚁数量
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=100)
 
 """
 信息素矩阵
@@ -275,6 +275,9 @@ def _update_tau_array():
 日期：2018-12-21
 
 """
+
+
+
 if __name__ == "__main__":
 
     _init_test_data();
@@ -291,17 +294,22 @@ if __name__ == "__main__":
     # 画出分类
     pre = ant_array[ant_target[0][0]]
 
-    plt.figure(figsize=(5, 6), facecolor='w')
+    plt.figure(figsize=(10, 10), facecolor='w')
     plt.subplot(211)
     plt.title('origin classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=20, edgecolors='none')
+    plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=30, edgecolors='none')
+
+
+
 
     plt.subplot(212)
     plt.title('ant classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=20, edgecolors='none')
+    plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=30, edgecolors='none')
 
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
+
+
 
     plt.show()
 
