@@ -1,4 +1,3 @@
-
 import numpy as np
 import sklearn.datasets as ds
 import matplotlib.pyplot as plt
@@ -21,7 +20,8 @@ sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, cent
 信息素矩阵
 """
 tao_array = [[random.random() for col in range(FEATURE_NUM)] for row in range(SAMPLE_NUM)]
-# 1234
+
+change_tao_array = [[0 for col in range(FEATURE_NUM)] for row in range(SAMPLE_NUM)]  # 根据聚类初始化计算出的信息素
 """
 蚁群解集
 """
@@ -34,12 +34,10 @@ t_ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]  # �
 """
 center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
 
-
-
 """
 当前轮次蚂蚁的目标函数值，前者是蚂蚁编号、后者是目标函数值
 """
-ant_target = [(0, 0) for col in range(ANT_NUM)]
+ant_target = [(0, 0) for col in range(ANT_NUM)]  # 生成ANT_NUM个（0，0）
 
 change_q = 0.3  # 更新蚁群时的转换规则参数，表示何种比例直接根据信息素矩阵进行更新
 L = 2  # 局部搜索的蚂蚁数量
@@ -59,21 +57,37 @@ def _init_test_data():
             ant_array[i][j] = tmp
 
     """
-    将前两个样本作为聚类中心点的初始值
+    随机选取聚类中心
     """
-    # original_init_center()
-    pick_center_by_density()
+    original_init_center()
+
 
 # 随机选取两个中心点
 def original_init_center():
     for i in range(0, CLASS_NUM):
+        # 两个属性，i个类
         center_array[i][0] = sample[random.randint(0, SAMPLE_NUM - 1)][0]
         center_array[i][1] = sample[random.randint(0, SAMPLE_NUM - 1)][1]
+
+
+# 改进后
+def change_init_test_data():
+    """
+    根据初始聚类中心，建立信息素矩阵
+    """
+    pick_center_by_density()
+    for i in range(SAMPLE_NUM):
+        for j in range(CLASS_NUM):
+            dist = [[]]
+            dist[i][j] = cal_dis(sample[i], center_array[j])
+            change_tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
+
 
 # 根据密度选取中心点
 def pick_center_by_density():
     # 半径
     r = 3
+    # 每个样本的密度
     density_arr = [0 for col in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
         for j in range(SAMPLE_NUM):
@@ -91,12 +105,14 @@ def pick_center_by_density():
 
     print(center_array)
 
+
 def cal_dis(param, param1):
     x1 = param[0]
     y1 = param[1]
     x2 = param1[0]
     y2 = param1[1]
-    return math.sqrt(math.pow(x1-x2,2)+math.pow(y1-y2,2))
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
+
 
 def findMax(density_arr):
     index = 0
@@ -311,8 +327,9 @@ def _update_tau_array():
 
 if __name__ == "__main__":
 
-    _init_test_data();
+    # _init_test_data()
 
+    change_init_test_data()
     for i in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(i, ant_target[0][1]))
 
@@ -338,4 +355,3 @@ if __name__ == "__main__":
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
 
     plt.show()
-
