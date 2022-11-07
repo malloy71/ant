@@ -1,4 +1,3 @@
-
 import math
 import operator
 import random
@@ -37,15 +36,13 @@ t_ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]  # �
 """
 center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
 
-
-
 """
 当前轮次蚂蚁的目标函数值，前者是蚂蚁编号、后者是目标函数值
 """
-ant_target = [(0, 0) for col in range(ANT_NUM)]
+ant_target = [(0, 0) for col in range(ANT_NUM)]  # 生成ANT_NUM个（0，0）
 
 change_q = 0.3  # 更新蚁群时的转换规则参数，表示何种比例直接根据信息素矩阵进行更新
-L = int(ANT_NUM/5)  # 局部搜索的蚂蚁数量
+L = int(ANT_NUM / 5)  # 局部搜索的蚂蚁数量
 change_jp = 0.3  # 局部搜索时该样本是否变动
 change_rho = 0.02  # 挥发参数
 Q = 0.1  # 信息素浓度参数
@@ -64,30 +61,50 @@ def _init_test_data(r):
     """
     将前两个样本作为聚类中心点的初始值
     """
-    # original_init_center()
-    pick_center_by_density(r)
+    original_init_center()
+    # pick_center_by_density(r)
+
 
 # 随机选取两个中心点
 def original_init_center():
     for i in range(0, CLASS_NUM):
+        # 两个属性，i个类
         center_array[i][0] = sample[random.randint(0, SAMPLE_NUM - 1)][0]
         center_array[i][1] = sample[random.randint(0, SAMPLE_NUM - 1)][1]
+
+
+# 改进后
+def change_init_test_data():
+    """
+    根据初始聚类中心，建立信息素矩阵
+    """
+    pick_center_by_density()
+    for i in range(SAMPLE_NUM):
+        for j in range(CLASS_NUM):
+            dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
+            dist[i][j] = cal_dis(sample[i], center_array[j])
+            tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
+
 
 # 改动点1：根据密度选取中心点
 def pick_center_by_density(r):
     # 半径
     # r = 2
+    # 每个样本的密度
     density_arr = [0 for col in range(SAMPLE_NUM)]
+    # 样本之间的距离矩阵
+    dis_arr = [[0 for col in range(SAMPLE_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
         for j in range(SAMPLE_NUM):
             if i == j:
                 continue
             dis = cal_dis(sample[i], sample[j])
+            dis_arr[i][j] = dis
             if dis <= r:
                 density_arr[i] += 1
-
+    # 待改进，综合考虑密度与距离
     for i in range(0, CLASS_NUM):
-        max_index = findMax(density_arr)
+        max_index = findMax(density_arr, dis_arr, r)
         center_array[i][0] = sample[max_index][0]
         center_array[i][1] = sample[max_index][1]
 
@@ -97,15 +114,23 @@ def cal_dis(param, param1):
     y1 = param[1]
     x2 = param1[0]
     y2 = param1[1]
-    return math.sqrt(math.pow(x1-x2,2)+math.pow(y1-y2,2))
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
 
-def findMax(density_arr):
-    index = 0
-    for i in range(len(density_arr)):
-        if density_arr[i] > density_arr[index]:
-            index = i
-    density_arr[index] = 0
-    return index
+
+def findMax(density_arr, dis_arr, r):
+    index1 = 0
+    index2 = 0
+    while (dis_arr[index1][index2] < r):
+        for i in range(len(density_arr)):
+            if density_arr[i] > density_arr[index1]:
+                index1 = i
+        density_arr[index1] = 0
+        for i in range(len(density_arr)):
+            if density_arr[i] > density_arr[index2]:
+                index2 = i
+        density_arr[index2] = 0
+
+    return (index1, index2)
 
 
 def _get_best_class_by_tao_value(sampleid):
@@ -134,11 +159,7 @@ def _get_best_class_by_tao_probablity(sampleid):
     return random_pick([0, 1], parray)
 
 
-def _update_ant():
-    """
-    更新蚁群步骤
-    """
-
+def global_optimize():
     # 产生一个随机数矩阵
     r = np.random.random((ANT_NUM, SAMPLE_NUM))
 
@@ -157,6 +178,23 @@ def _update_ant():
                 tmp_index = _get_best_class_by_tao_probablity(j)
 
                 ant_array[i][j] = tmp_index
+
+
+def change_global_optimize():
+    # 遗传选择交叉
+    for i in range(0, ANT_NUM):
+        for j in range(0, SAMPLE_NUM):
+            pass
+
+
+def _update_ant():
+    """
+    更新蚁群步骤
+    """
+    # 原全局
+    global_optimize()
+    # 优化后全局
+    # _global_search()
 
     # print(ant_array[i])
     # 1. 确定一个新的聚类中心
@@ -309,11 +347,14 @@ def _update_tau_array():
 
     # print(np.var(tao_array))
 
+
+# 全局搜索
+
 def _global_search():
     temp_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]
     # 禁忌表，在同一轮迭代中，交换过的蚂蚁，不能再次交换
     taboo = []
-    for i in range(int(ANT_NUM/2)):
+    for i in range(int(ANT_NUM / 2)):
         peek_ant1 = 0
         peek_ant2 = 0
         # 交换index1只蚂蚁与index2只蚂蚁特定位置上的值
@@ -326,7 +367,7 @@ def _global_search():
         temp_1 = ant_array[peek_ant1]
         temp_2 = ant_array[peek_ant2]
 
-        for j in range(int(SAMPLE_NUM/10)):
+        for j in range(int(SAMPLE_NUM / 10)):
             index = random.randint(0, SAMPLE_NUM - 1)
             temp_1[index], temp_2[index] = temp_2[index], temp_1[index]
         temp_array[peek_ant1] = temp_1
@@ -359,6 +400,7 @@ from sklearn.cluster import KMeans
 import original_test
 from sklearn.metrics import precision_score
 
+
 def run_batch(r):
     _init_test_data(r)
 
@@ -373,21 +415,18 @@ def run_batch(r):
     pre = ant_array[ant_target[0][0]]
     optimizeAntRes = precision_score(target_classify, pre)
 
-
     if (optimizeAntRes > 0.9):
-        print("--------------------important!!!!"+"Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
+        print("--------------------important!!!!" + "Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
     else:
         print("Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
 
+
 if __name__ == "__main__":
-
-
 
     # r = 1.5
     # while (r<5):
     #     run_batch(r)
     #     r += 0.1
-
 
     # i=0
     # while(i<10):
@@ -398,13 +437,15 @@ if __name__ == "__main__":
     #     run_batch(2.9)
     #     i+=1
 
-    r=2.5
-    _init_test_data(r)
+    r = 2.5
+    # _init_test_data(r)
+    change_init_test_data()
 
     for i in range(0, ITERATE_NUM):
-        # print("iterate No. {} target {}".format(i, ant_target[0][1]))
+        print("iterate No. {} target {}".format(i, ant_target[0][1]))
 
         _update_ant()
+        # global_optimize()
         _global_search()
         _local_search()
 
@@ -440,14 +481,11 @@ if __name__ == "__main__":
     plt.title('no update ant')
     plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
 
-    optimizeAntRes = precision_score(target_classify,pre)
-    unOptimizeAntRes = precision_score(target_classify,original_res)
+    optimizeAntRes = precision_score(target_classify, pre)
+    unOptimizeAntRes = precision_score(target_classify, original_res)
     print("优化后准确率：")
     print(optimizeAntRes)
     print("不优化准确率：")
     print(unOptimizeAntRes)
 
     plt.show()
-
-
-
