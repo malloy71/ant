@@ -13,7 +13,7 @@ FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
 ITERATE_NUM = 200  # 迭代次数
-
+NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
 """
@@ -78,7 +78,8 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    pick_center_by_density()
+    r = 2.5
+    pick_center_by_density(r)
     for i in range(SAMPLE_NUM):
         for j in range(CLASS_NUM):
             dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
@@ -180,175 +181,7 @@ def global_optimize():
                 ant_array[i][j] = tmp_index
 
 
-def change_global_optimize():
-    # 遗传选择交叉
-    for i in range(0, ANT_NUM):
-        for j in range(0, SAMPLE_NUM):
-            pass
-
-
-def _update_ant():
-    """
-    更新蚁群步骤
-    """
-    # 原全局
-    global_optimize()
-    # 优化后全局
-    # _global_search()
-
-    # print(ant_array[i])
-    # 1. 确定一个新的聚类中心
-    f_value_feature_0 = 0
-    f_value_feature_1 = 0
-
-    for i in range(0, CLASS_NUM):
-
-        f_num = 0
-
-        for j in range(0, ANT_NUM):
-
-            for k in range(0, SAMPLE_NUM):
-
-                if ant_array[j][k] == 0:
-
-                    f_num += 1
-                    f_value_feature_0 += sample[k][0]  # 特征1
-
-                else:
-
-                    f_num += 1
-                    f_value_feature_1 += sample[k][1]  # 特征2
-
-        if i == 0:
-            center_array[i][0] = f_value_feature_0 / f_num
-        else:
-            center_array[i][1] = f_value_feature_1 / f_num
-
-        # print(center_array[i], f_num)
-
-
-def _judge_sample(sampleid):
-    """
-    计算与当前聚类点的举例，判断该sample应所属的归类
-    """
-    target_value_0 = 0
-    target_value_1 = 0
-
-    f1 = math.pow((sample[sampleid][0] - center_array[0][0]), 2)
-    f2 = math.pow((sample[sampleid][1] - center_array[0][1]), 2)
-    target_value_0 = math.sqrt(f1 + f2)
-
-    f1 = math.pow((sample[sampleid][0] - center_array[1][0]), 2)
-    f2 = math.pow((sample[sampleid][1] - center_array[1][1]), 2)
-    target_value_1 = math.sqrt(f1 + f2)
-
-    if target_value_0 > target_value_1:
-        return 1
-    else:
-        return 0
-
-
-def _local_search():
-    """
-    局部搜索逻辑
-    """
-
-    # 2. 根据新的聚类中心计算每个蚂蚁的目标函数
-
-    for i in range(0, ANT_NUM):
-
-        target_value = 0
-
-        for j in range(0, SAMPLE_NUM):
-
-            if ant_array[i][j] == 0:
-
-                # 与分类0的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
-                target_value += math.sqrt(f1 + f2)
-
-            else:
-                # 与分类1的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
-                target_value += math.sqrt(f1 + f2)
-
-                # 保存蚂蚁i当前的目标函数
-        ant_target[i] = (i, target_value)
-
-    # 3. 对全部蚂蚁的目标进行排序，选择最优的L只蚂蚁
-
-    ant_target.sort(key=operator.itemgetter(1))  # 对ant进行排序
-
-    # 4. 对这L只蚂蚁进行解的优化
-    for i in range(0, L):
-
-        ant_id = ant_target[i][0]
-
-        target_value = 0
-
-        for j in range(0, SAMPLE_NUM):
-
-            # 对于该蚂蚁解集中的每一个样本
-            if random.random() < change_jp:
-                # 将该样本调整到与当前某个聚类点最近的位置
-                t_ant_array[ant_id][j] = _judge_sample(j)
-
-        # 判断是否保留这个临时解
-        for j in range(0, SAMPLE_NUM):
-
-            if t_ant_array[ant_id][j] == 0:
-
-                # 与分类0的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
-                target_value += math.sqrt(f1 + f2)
-
-            else:
-                # 与分类1的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
-                target_value += math.sqrt(f1 + f2)
-
-        if target_value < ant_target[i][1]:
-            # 更新最优解
-            ant_array[ant_id] = t_ant_array[ant_id]
-
-
-def _update_tau_array():
-    """
-    更新信息素表
-    """
-    for i in range(0, SAMPLE_NUM):
-
-        for j in range(0, CLASS_NUM):
-
-            tmp = tao_array[i][j]  # 当前的信息素
-
-            tmp = (1 - change_rho) * tmp  # 处理信息素挥发
-
-            J = 0
-
-            # 处理信息素浓度增加
-            for k in range(0, ANT_NUM):
-
-                if ant_array[k][i] == j:
-                    f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
-                    f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
-                    J += math.sqrt(f1 + f2)
-
-            if J != 0:
-                tmp += Q / J
-
-                # print(tmp, Q/J)
-
-            tao_array[i][j] = tmp
-
-    # print(np.var(tao_array))
-
-
-# 全局搜索
+# 改进全局搜索
 
 def _global_search():
     temp_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]
@@ -396,6 +229,236 @@ def _global_search():
             ant_array[ant_id] = temp_array[ant_id]
 
 
+def _update_ant():
+    """
+    更新目标函数值
+    """
+    # 原全局
+    # global_optimize()
+    # 优化后全局
+    # _global_search()
+
+    # print(ant_array[i])
+    # 1. 确定一个新的聚类中心
+    f_value_feature_0 = 0
+    f_value_feature_1 = 0
+
+    for i in range(0, CLASS_NUM):
+
+        f_num = 0
+
+        for j in range(0, ANT_NUM):
+
+            for k in range(0, SAMPLE_NUM):
+
+                if ant_array[j][k] == 0:
+
+                    f_num += 1
+                    f_value_feature_0 += sample[k][0]  # 特征1
+
+                else:
+
+                    f_num += 1
+                    f_value_feature_1 += sample[k][1]  # 特征2
+
+        if i == 0:
+            center_array[i][0] = f_value_feature_0 / f_num
+        else:
+            center_array[i][1] = f_value_feature_1 / f_num
+
+        # print(center_array[i], f_num)
+
+    # 2. 根据新的聚类中心计算每个蚂蚁的目标函数
+
+    for i in range(0, ANT_NUM):
+
+        target_value = 0
+
+        for j in range(0, SAMPLE_NUM):
+
+            if ant_array[i][j] == 0:
+
+                # 与分类0的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+
+            else:
+                # 与分类1的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+
+                # 保存蚂蚁i当前的目标函数
+        ant_target[i] = (i, target_value)
+
+
+def _judge_sample(sampleid):
+    """
+    计算与当前聚类点的举例，判断该sample应所属的归类
+    """
+    target_value_0 = 0
+    target_value_1 = 0
+
+    f1 = math.pow((sample[sampleid][0] - center_array[0][0]), 2)
+    f2 = math.pow((sample[sampleid][1] - center_array[0][1]), 2)
+    target_value_0 = math.sqrt(f1 + f2)
+
+    f1 = math.pow((sample[sampleid][0] - center_array[1][0]), 2)
+    f2 = math.pow((sample[sampleid][1] - center_array[1][1]), 2)
+    target_value_1 = math.sqrt(f1 + f2)
+
+    if target_value_0 > target_value_1:
+        return 1
+    else:
+        return 0
+
+
+#  原局部搜索
+def _local_search():
+    """
+    局部搜索逻辑
+    """
+
+    # 3. 对全部蚂蚁的目标进行排序，选择最优的L只蚂蚁
+
+    ant_target.sort(key=operator.itemgetter(1))  # 对ant进行排序
+
+    # 4. 对这L只蚂蚁进行解的优化
+    for i in range(0, L):
+
+        ant_id = ant_target[i][0]
+
+        target_value = 0
+
+        for j in range(0, SAMPLE_NUM):
+
+            # 对于该蚂蚁解集中的每一个样本
+            if random.random() < change_jp:
+                # 将该样本调整到与当前某个聚类点最近的位置
+                t_ant_array[ant_id][j] = _judge_sample(j)
+
+        # 判断是否保留这个临时解
+        for j in range(0, SAMPLE_NUM):
+
+            if t_ant_array[ant_id][j] == 0:
+
+                # 与分类0的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+
+            else:
+                # 与分类1的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+
+        if target_value < ant_target[i][1]:
+            # 更新最优解
+            ant_array[ant_id] = t_ant_array[ant_id]
+
+
+# 改进后局部搜索
+def change_local_search():
+    # 4.对所有蚂蚁进行优化
+    for i in range(0, ANT_NUM):
+
+        ant_id = ant_target[i][0]
+
+        target_value = 0
+
+        for j in range(0, SAMPLE_NUM):
+
+            # 对于该蚂蚁解集中的每一个样本
+            if random.random() < change_jp:
+                # 将该样本调整到与当前某个聚类点最近的位置
+                t_ant_array[ant_id][j] = _judge_sample(j)
+
+        # 判断是否保留这个临时解
+        for j in range(0, SAMPLE_NUM):
+
+            if t_ant_array[ant_id][j] == 0:
+
+                # 与分类0的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+
+            else:
+                # 与分类1的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+
+        if target_value < ant_target[i][1]:
+            # 更新最优解
+            ant_array[ant_id] = t_ant_array[ant_id]
+
+
+# 原更新信息素表
+def _update_tau_array():
+    """
+    更新信息素表
+    """
+    for i in range(0, SAMPLE_NUM):
+
+        for j in range(0, CLASS_NUM):
+
+            tmp = tao_array[i][j]  # 当前的信息素
+
+            tmp = (1 - change_rho) * tmp  # 处理信息素挥发
+
+            J = 0
+
+            # 处理信息素浓度增加
+            for k in range(0, ANT_NUM):
+
+                if ant_array[k][i] == j:
+                    f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
+                    f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
+                    J += math.sqrt(f1 + f2)
+
+            if J != 0:
+                tmp += Q / J
+
+                # print(tmp, Q/J)
+
+            tao_array[i][j] = tmp
+
+    # print(np.var(tao_array))
+
+
+# 改进更新信息素表
+def change_update_tau_array():
+    for i in range(0, SAMPLE_NUM):
+
+        for j in range(0, CLASS_NUM):
+            tmp = tao_array[i][j]  # 当前的信息素
+            rou = (ITERATE_NUM - NOW_ITER) / ITERATE_NUM  # 此轮挥发系数
+            if rou > 0.02:
+                tmp = rou * tmp  # 处理信息素挥发
+            else:
+                tmp = 0.02 * tmp
+
+            J = 0
+
+            # 处理信息素浓度增加
+            for k in range(0, ANT_NUM):
+
+                if ant_array[k][i] == j:
+                    f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
+                    f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
+                    J += math.sqrt(f1 + f2)
+
+            if J != 0:
+                tmp += Q / J
+
+                # print(tmp, Q/J)
+
+            tao_array[i][j] = tmp
+
+
 from sklearn.cluster import KMeans
 import original_test
 from sklearn.metrics import precision_score
@@ -441,8 +504,8 @@ if __name__ == "__main__":
     # _init_test_data(r)
     change_init_test_data()
 
-    for i in range(0, ITERATE_NUM):
-        print("iterate No. {} target {}".format(i, ant_target[0][1]))
+    for NOW_ITER in range(0, ITERATE_NUM):
+        print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant()
         # global_optimize()
