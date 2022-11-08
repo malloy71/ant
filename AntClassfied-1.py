@@ -8,9 +8,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sklearn.datasets as ds
 
-SAMPLE_NUM = 500  # 样本数量
-FEATURE_NUM = 2  # 每个样本的特征数量
-CLASS_NUM = 2  # 分类数量
+SAMPLE_NUM = 50  # 样本数量
+FEATURE_NUM = 5  # 每个样本的特征数量
+CLASS_NUM = 3  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
 ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
@@ -79,7 +79,8 @@ def change_init_test_data():
     根据初始聚类中心，建立信息素矩阵
     """
     r = 2.5
-    pick_center_by_density(r)
+    # pick_center_by_density(r)
+    original_init_center()
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
         for j in range(CLASS_NUM):
@@ -536,7 +537,7 @@ if __name__ == "__main__":
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
 
-    tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
+    tmp_case, temp_target = ds.make_blobs(250, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
 
     # kmeans
     model = KMeans(n_clusters=2)
@@ -547,16 +548,16 @@ if __name__ == "__main__":
     plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
 
     # 未优化的蚁群算法
-    original_res = original_test.run(sample, target_classify)
-    plt.subplot(224)
-    plt.title('low ant classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
+    # original_res = original_test.run(sample, target_classify)
+    # plt.subplot(224)
+    # plt.title('low ant classfication')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
 
     optimizeAntRes = precision_score(target_classify, pre)
-    unOptimizeAntRes = precision_score(target_classify, original_res)
+    # unOptimizeAntRes = precision_score(target_classify, original_res)
     print("优化后准确率：")
     print(optimizeAntRes)
-    print("不优化准确率：")
-    print(unOptimizeAntRes)
+    # print("不优化准确率：")
+    # print(unOptimizeAntRes)
 
     plt.show()

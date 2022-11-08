@@ -6,8 +6,8 @@ import random
 import math
 import operator
 
-SAMPLE_NUM = 500  # 样本数量
-FEATURE_NUM = 2  # 每个样本的特征数量
+SAMPLE_NUM = 50  # 样本数量
+FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
 
