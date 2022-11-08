@@ -8,16 +8,16 @@ import matplotlib.pyplot as plt
 import numpy as np
 import sklearn.datasets as ds
 
-SAMPLE_NUM = 50  # 样本数量
+SAMPLE_NUM = 500  # 样本数量
 FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-ITERATE_NUM = 200  # 迭代次数
+ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
 
 """
 信息素矩阵
@@ -80,11 +80,14 @@ def change_init_test_data():
     """
     r = 2.5
     pick_center_by_density(r)
+    dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
         for j in range(CLASS_NUM):
-            dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
             dist[i][j] = cal_dis(sample[i], center_array[j])
-            tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
+            if(CLASS_NUM * dist[i][j] != 0):
+
+                tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
+
 
 
 # 改动点1：根据密度选取中心点
@@ -104,10 +107,13 @@ def pick_center_by_density(r):
             if dis <= r:
                 density_arr[i] += 1
     # 待改进，综合考虑密度与距离
-    for i in range(0, CLASS_NUM):
-        max_index = findMax(density_arr, dis_arr, r)
-        center_array[i][0] = sample[max_index][0]
-        center_array[i][1] = sample[max_index][1]
+
+    max_index = findMax(density_arr, dis_arr, r)
+    center_array[0][0] = sample[max_index[0]][0]
+    center_array[0][1] = sample[max_index[0]][1]
+
+    center_array[1][0] = sample[max_index[1]][0]
+    center_array[1][1] = sample[max_index[1]][1]
 
 
 def cal_dis(param, param1):
@@ -131,7 +137,7 @@ def findMax(density_arr, dis_arr, r):
                 index2 = i
         density_arr[index2] = 0
 
-    return (index1, index2)
+    return [index1, index2]
 
 
 def _get_best_class_by_tao_value(sampleid):
@@ -510,10 +516,10 @@ if __name__ == "__main__":
         _update_ant()
         # global_optimize()
         _global_search()
-        _local_search()
-
-        _update_tau_array()
-
+        # _local_search()
+        change_local_search()
+        # _update_tau_array()
+        change_update_tau_array()
     # 结果集
     pre = ant_array[ant_target[0][0]]
     optimizeAntRes = precision_score(target_classify, pre)
@@ -524,14 +530,15 @@ if __name__ == "__main__":
     plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=20, edgecolors='none')
 
     plt.subplot(222)
-    plt.title('ant classfication')
+    plt.title('perfect ant classfication')
     plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=20, edgecolors='none')
 
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
 
-    tmp_case, temp_target = ds.make_blobs(100, n_features=2, centers=2, random_state=8)
+    tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
 
+    # kmeans
     model = KMeans(n_clusters=2)
     model.fit(tmp_case)
     km_res = model.predict(sample)
@@ -539,9 +546,10 @@ if __name__ == "__main__":
     plt.title('KMeans classfication')
     plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
 
+    # 未优化的蚁群算法
     original_res = original_test.run(sample, target_classify)
     plt.subplot(224)
-    plt.title('no update ant')
+    plt.title('low ant classfication')
     plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
 
     optimizeAntRes = precision_score(target_classify, pre)
