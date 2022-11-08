@@ -5,19 +5,20 @@ import threading
 import time
 
 import matplotlib.pyplot as plt
+import numpy
 import numpy as np
 import sklearn.datasets as ds
 
 SAMPLE_NUM = 500  # 样本数量
-FEATURE_NUM = 2  # 每个样本的特征数量
+FEATURE_NUM = 5  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-ITERATE_NUM = 50  # 迭代次数
+ITERATE_NUM = 30  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
-初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
+初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=99)
 
 """
 信息素矩阵
@@ -61,8 +62,8 @@ def _init_test_data(r):
     """
     将前两个样本作为聚类中心点的初始值
     """
-    original_init_center()
-    # pick_center_by_density(r)
+    # original_init_center()
+    pick_center_by_density(r)
 
 
 # 随机选取两个中心点
@@ -78,7 +79,7 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = 2.5
+    r = 1.75
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -509,7 +510,7 @@ if __name__ == "__main__":
     r = 2.5
     # _init_test_data(r)
     change_init_test_data()
-
+    eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
@@ -520,43 +521,64 @@ if __name__ == "__main__":
         change_local_search()
         # _update_tau_array()
         change_update_tau_array()
+        eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
-    pre = ant_array[ant_target[0][0]]
+    pre = numpy.array(ant_array[ant_target[0][0]])
     optimizeAntRes = precision_score(target_classify, pre)
+    colors1 = '#C0504D'
+    colors2 = '#00EEEE'
+    colors3 = '#FF6600'
+
+    area1 = np.pi * 2 ** 2  # 半径为2的圆的面积
+    area2 = np.pi * 3 ** 2
+    area3 = np.pi * 4 ** 2
 
     plt.figure(figsize=(10, 10), facecolor='w')
     plt.subplot(221)
     plt.title('origin classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=20, edgecolors='none')
+    plt.scatter(sample[:, 0][target_classify==0], sample[:, 1][target_classify==0],s=20)
+    plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],marker='x',s=20)
 
     plt.subplot(222)
     plt.title('perfect ant classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=20, edgecolors='none')
+    plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0], s=20)
+    plt.scatter(sample[:, 0][pre == 1], sample[:, 1][pre == 1], marker='x', s=20)
 
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
-
-    tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
-
-    # kmeans
-    model = KMeans(n_clusters=2)
-    model.fit(tmp_case)
-    km_res = model.predict(sample)
-    plt.subplot(223)
-    plt.title('KMeans classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
-
-    # 未优化的蚁群算法
-    original_res = original_test.run(sample, target_classify)
-    plt.subplot(224)
-    plt.title('low ant classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
-
-    optimizeAntRes = precision_score(target_classify, pre)
-    unOptimizeAntRes = precision_score(target_classify, original_res)
     print("优化后准确率：")
-    print(optimizeAntRes)
-    print("不优化准确率：")
-    print(unOptimizeAntRes)
+    if(optimizeAntRes<0.5):
+        print(1-optimizeAntRes)
+    else:
+        print(optimizeAntRes)
 
+    # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
+    #
+    # # kmeans
+    # model = KMeans(n_clusters=2)
+    # model.fit(tmp_case)
+    # km_res = model.predict(sample)
+    # plt.subplot(223)
+    # plt.title('KMeans classfication')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
+    #
+    # # 未优化的蚁群算法
+    # original_res = original_test.run(sample, target_classify)
+    # plt.subplot(224)
+    # plt.title('low ant classfication')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
+    #
+    # optimizeAntRes = precision_score(target_classify, pre)
+    # unOptimizeAntRes = precision_score(target_classify, original_res)
+    # print("优化后准确率：")
+    # print(optimizeAntRes)
+    # print("不优化准确率：")
+    # print(unOptimizeAntRes)
+    plt.savefig("./resimg/"+ str(time.time()) +".png")
+
+    plt.show()
+    plt.figure(figsize=(5, 5), facecolor='w')
+    plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    plt.title("iter and target")
+    plt.savefig("./resimg/" +str(time.time()) + ".png")
     plt.show()
