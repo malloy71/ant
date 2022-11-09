@@ -1,4 +1,6 @@
 # 蚁群聚类：原始链接https://blog.csdn.net/Fredric_2014/article/details/85167556
+import time
+
 import numpy as np
 import sklearn.datasets as ds
 import matplotlib.pyplot as plt
@@ -6,15 +8,17 @@ import random
 import math
 import operator
 
+from sklearn.metrics import precision_score
+
 SAMPLE_NUM = 500  # 样本数量
 FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-
+ITER_NUM = 10
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
 """
-# sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
 
 """
 信息素矩阵
@@ -278,16 +282,34 @@ def _update_tau_array():
 
 
 
-def run(data,res):
+# def run(data,res):
+#
+#     global sample
+#     sample = data
+#     global target_classify
+#     target_classify= res
+#     _init_test_data(data,res)
+#     eco_target = [0 for col in range(ITER_NUM)]
+#     for NOW_ITER in range(0, ITER_NUM):
+#         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
+#
+#         _update_ant()
+#
+#         _local_search()
+#
+#         _update_tau_array()
+#
+#         eco_target[NOW_ITER] = ant_target[0][1]
 
-    global sample
-    sample = data
-    global target_classify
-    target_classify= res
-    _init_test_data(data,res);
+import numpy
 
-    for i in range(0, 100):
-        # print("iterate No. {} target {}".format(i, ant_target[0][1]))
+
+if __name__ == "__main__":
+
+    _init_test_data(sample,target_classify)
+    eco_target = [0 for col in range(ITER_NUM)]
+    for NOW_ITER in range(0, ITER_NUM):
+        print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant()
 
@@ -295,8 +317,42 @@ def run(data,res):
 
         _update_tau_array()
 
-    # 画出分类
-    pre = ant_array[ant_target[0][0]]
+        eco_target[NOW_ITER] = ant_target[0][1]
 
-    return pre
 
+    pre = numpy.array(ant_array[ant_target[0][0]])
+    optimizeAntRes = precision_score(target_classify, pre)
+
+    colors1 = '#C0504D'
+    colors2 = '#00EEEE'
+    colors3 = '#FF6600'
+
+    plt.figure(figsize=(10, 10), facecolor='w')
+    plt.subplot(221)
+    plt.title('origin classfication')
+    plt.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0], s=20)
+    plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1], marker='x', s=20)
+
+    plt.subplot(222)
+    plt.title('original ant classfication')
+    plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0], s=20)
+    plt.scatter(sample[:, 0][pre == 1], sample[:, 1][pre == 1], marker='x', s=20)
+
+    #中心点
+    plt.plot(center_array[0][0], center_array[0][1], 'ro')
+    plt.plot(center_array[1][0], center_array[1][1], 'bo')
+    plt.show()
+
+    plt.savefig("./resimg/original_ant_clustering" + str(time.time()) +".png")
+
+    plt.figure(figsize=(5, 5), facecolor='w')
+    plt.plot(range(ITER_NUM) , eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    plt.title("iter and target")
+    plt.show()
+    plt.savefig("./resimg/original_ant_clustering" +str(time.time()) + ".png")
+    print("优化后准确率：")
+
+    if (optimizeAntRes < 0.5):
+        print(1 - optimizeAntRes)
+    else:
+        print(optimizeAntRes)
