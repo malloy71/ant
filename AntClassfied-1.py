@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import sklearn.datasets as ds
-
+from sklearn import metrics
 SAMPLE_NUM = 500  # 样本数量
 FEATURE_NUM = 5  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
@@ -79,7 +79,7 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = 1.75
+    r = 1.25
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -525,6 +525,14 @@ if __name__ == "__main__":
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
     optimizeAntRes = precision_score(target_classify, pre)
+    sc = str(metrics.silhouette_score(sample , pre))
+    ch = str(metrics.calinski_harabasz_score(sample,pre))
+    fm = str(metrics.fowlkes_mallows_score(target_classify,pre))
+    ho=str(metrics.homogeneity_score(target_classify,pre))
+    com=str(metrics.completeness_score(target_classify,pre))
+    v=str(metrics.v_measure_score(target_classify,pre))
+    mi=str(metrics.mutual_info_score(target_classify,pre))
+
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -541,8 +549,8 @@ if __name__ == "__main__":
 
     plt.subplot(222)
     plt.title('perfect ant classfication')
-    plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0], s=20)
-    plt.scatter(sample[:, 0][pre == 1], sample[:, 1][pre == 1], marker='x', s=20)
+    plt.scatter(sample[:, 0][pre == 1], sample[:, 1][pre == 1], s=20)
+    plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0], marker='x', s=20)
 
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
@@ -551,7 +559,13 @@ if __name__ == "__main__":
         print(1-optimizeAntRes)
     else:
         print(optimizeAntRes)
-
+    print('sc=' + sc)
+    print('ch=' + ch)
+    print('fm=' + fm)
+    print('ho=' + ho)
+    print('com='+com)
+    print('v=' +v)
+    print('mi'+mi)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
     # # kmeans
