@@ -209,7 +209,7 @@ def _judge_sample(sampleid):
     else:
         return 0
 
-
+#
 def _local_search():
     """
     局部搜索逻辑
@@ -359,10 +359,10 @@ from sklearn.cluster import KMeans
 import original_test
 from sklearn.metrics import precision_score
 
-def run_batch(r):
+def run_batch(r,itr):
     _init_test_data(r)
 
-    for i in range(0, ITERATE_NUM):
+    for i in range(0, itr):
         _update_ant()
         _global_search()
         _local_search()
@@ -375,79 +375,72 @@ def run_batch(r):
 
 
     if (optimizeAntRes > 0.9):
-        print("--------------------important!!!!"+"Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
+        print("--------------------important!!!!"+"Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r) + "---itr:" + str(itr))
     else:
-        print("Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
+        print("Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r) + "---itr:" + str(itr))
 
 if __name__ == "__main__":
 
+    itr = 40
+
+    while(itr <= 200):
+        run_batch(2.5,itr)
+        itr += 20
 
 
-    # r = 1.5
-    # while (r<5):
-    #     run_batch(r)
-    #     r += 0.1
 
 
-    # i=0
-    # while(i<10):
-    #     print("=======batch:"+str(i))
-    #     run_batch(1.6)
-    #     run_batch(2.5)
-    #     run_batch(3.1)
-    #     run_batch(2.9)
-    #     i+=1
 
-    r=2.5
-    _init_test_data(r)
-
-    for i in range(0, ITERATE_NUM):
-        # print("iterate No. {} target {}".format(i, ant_target[0][1]))
-
-        _update_ant()
-        _global_search()
-        _local_search()
-
-        _update_tau_array()
-
-    # 结果集
-    pre = ant_array[ant_target[0][0]]
-    optimizeAntRes = precision_score(target_classify, pre)
-
-    plt.figure(figsize=(10, 10), facecolor='w')
-    plt.subplot(221)
-    plt.title('origin classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=20, edgecolors='none')
-
-    plt.subplot(222)
-    plt.title('ant classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=20, edgecolors='none')
-
-    plt.plot(center_array[0][0], center_array[0][1], 'ro')
-    plt.plot(center_array[1][0], center_array[1][1], 'bo')
-
-    tmp_case, temp_target = ds.make_blobs(100, n_features=2, centers=2, random_state=8)
-
-    model = KMeans(n_clusters=2)
-    model.fit(tmp_case)
-    km_res = model.predict(sample)
-    plt.subplot(223)
-    plt.title('KMeans classfication')
-    plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
-
-    original_res = original_test.run(sample, target_classify)
-    plt.subplot(224)
-    plt.title('no update ant')
-    plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
-
-    optimizeAntRes = precision_score(target_classify,pre)
-    unOptimizeAntRes = precision_score(target_classify,original_res)
-    print("优化后准确率：")
-    print(optimizeAntRes)
-    print("不优化准确率：")
-    print(unOptimizeAntRes)
-
-    plt.show()
+    # r=2.5
+    # _init_test_data(r)
+    #
+    # for i in range(0, ITERATE_NUM):
+    #     # print("iterate No. {} target {}".format(i, ant_target[0][1]))
+    #
+    #     _update_ant()
+    #     _global_search()
+    #     _local_search()
+    #
+    #     _update_tau_array()
+    #
+    # # 结果集
+    # pre = ant_array[ant_target[0][0]]
+    # optimizeAntRes = precision_score(target_classify, pre)
+    #
+    # plt.figure(figsize=(10, 10), facecolor='w')
+    # plt.subplot(221)
+    # plt.title('origin classfication')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=target_classify, s=20, edgecolors='none')
+    #
+    # plt.subplot(222)
+    # plt.title('ant classfication')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=pre, s=20, edgecolors='none')
+    #
+    # plt.plot(center_array[0][0], center_array[0][1], 'ro')
+    # plt.plot(center_array[1][0], center_array[1][1], 'bo')
+    #
+    # tmp_case, temp_target = ds.make_blobs(100, n_features=2, centers=2, random_state=8)
+    #
+    # model = KMeans(n_clusters=2)
+    # model.fit(tmp_case)
+    # km_res = model.predict(sample)
+    # plt.subplot(223)
+    # plt.title('KMeans classfication')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
+    #
+    # original_res = original_test.run(sample, target_classify)
+    # plt.subplot(224)
+    # plt.title('no update ant')
+    # plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
+    #
+    # optimizeAntRes = precision_score(target_classify,pre)
+    # unOptimizeAntRes = precision_score(target_classify,original_res)
+    # print("优化后准确率：")
+    # print(optimizeAntRes)
+    # print("不优化准确率：")
+    # print(unOptimizeAntRes)
+    #
+    # plt.show()
 
 
 
