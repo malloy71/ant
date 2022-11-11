@@ -588,11 +588,11 @@ if __name__ == "__main__":
     # print(optimizeAntRes)
     # print("不优化准确率：")
     # print(unOptimizeAntRes)
-    plt.savefig("./resimg/" + str(time.time()) +".png")
+    #plt.savefig("./resimg/" + str(time.time()) +".png")
 
     plt.show()
     plt.figure(figsize=(5, 5), facecolor='w')
     plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
     plt.title("iter and target")
-    plt.savefig("./resimg/" + str(time.time()) + ".png")
+    #plt.savefig("./resimg/" + str(time.time()) + ".png")
     plt.show()
