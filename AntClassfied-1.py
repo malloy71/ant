@@ -8,7 +8,7 @@ import numpy
 import numpy as np
 import sklearn.datasets as ds
 
-SAMPLE_NUM = 500  # 样本数量
+SAMPLE_NUM = 100  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
@@ -17,7 +17,7 @@ NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=99)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=100)
 
 """
 信息素矩阵
@@ -54,7 +54,7 @@ def _init_test_data(r):
     """
     for i in range(0, ANT_NUM):
         for j in range(0, SAMPLE_NUM):
-            tmp = random.randint(0, FEATURE_NUM)
+            tmp = random.randint(0, FEATURE_NUM-1)
 
             ant_array[i][j] = tmp
 
@@ -90,23 +90,27 @@ def getR():
             min_y = i
     xR = (sample[max_x][0]-sample[min_x][0])/CLASS_NUM
     yR = (sample[max_y][1]-sample[min_y][1])/CLASS_NUM
-    return max(xR, yR)
+    return max(xR, yR)-3
 
 
 def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = getR()
+    # r = getR()
+    r = 3
     print("r=",r)
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
-    for i in range(SAMPLE_NUM):
-        for j in range(CLASS_NUM):
-            dist[i][j] = cal_dis(sample[i], center_array[j])
-            if(CLASS_NUM * dist[i][j] != 0):
+    for s in range(ANT_NUM):
+        for i in range(SAMPLE_NUM):
+            for j in range(CLASS_NUM):
+                dist[i][j] = cal_dis(sample[i], center_array[j])
+                if(CLASS_NUM * dist[i][j] != 0):
 
-                tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
+                    tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
+            tmp=_get_best_class_by_tao_value(i)
+            ant_array[s][i]=tmp
 
 
 
@@ -128,12 +132,12 @@ def pick_center_by_density(r):
                 density_arr[i] += 1
     # 待改进，综合考虑密度与距离
     count = 0
-    max_index = findMax(density_arr)
     pick_arr = []
-    while i < CLASS_NUM:
+    while count < CLASS_NUM:
+        max_index = findMax(density_arr)
         if count == 0:
-            center_array[i][0] = sample[max_index][0]
-            center_array[i][1] = sample[max_index][1]
+            center_array[count][0] = sample[max_index][0]
+            center_array[count][1] = sample[max_index][1]
             pick_arr.append(max_index)
             count += 1
             continue
@@ -143,8 +147,8 @@ def pick_center_by_density(r):
                 if(dis_arr[max_index][pick] < r):
                     flag = 1
             if(flag == 0):
-                center_array[i][0] = sample[max_index][0]
-                center_array[i][1] = sample[max_index][1]
+                center_array[count][0] = sample[max_index][0]
+                center_array[count][1] = sample[max_index][1]
                 pick_arr.append(max_index)
                 count += 1
 
@@ -245,16 +249,18 @@ def _global_search():
         for j in range(0, SAMPLE_NUM):
 
             if t_ant_array[ant_id][j] == 0:
-
                 # 与分类0的聚类点计算距离
                 f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
                 f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
                 target_value += math.sqrt(f1 + f2)
-
-            else:
+            if t_ant_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
                 f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
                 f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
+                target_value += math.sqrt(f1 + f2)
+            if t_ant_array[ant_id][j] == 2:
+                f1 = math.pow((sample[j][0] - center_array[2][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[2][1]), 2)
                 target_value += math.sqrt(f1 + f2)
 
         if target_value < ant_target[i][1]:
@@ -519,34 +525,18 @@ def run_batch(r):
 
 if __name__ == "__main__":
 
-    # r = 1.5
-    # while (r<5):
-    #     run_batch(r)
-    #     r += 0.1
-
-    # i=0
-    # while(i<10):
-    #     print("=======batch:"+str(i))
-    #     run_batch(1.6)
-    #     run_batch(2.5)
-    #     run_batch(3.1)
-    #     run_batch(2.9)
-    #     i+=1
-
-    r = 2.5
-    # _init_test_data(r)
     change_init_test_data()
     eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant()
-        # global_optimize()
-        _global_search()
+        global_optimize()
+        # _global_search()
         # _local_search()
         change_local_search()
-        # _update_tau_array()
-        change_update_tau_array()
+        _update_tau_array()
+        # !!!!change_update_tau_array()
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
@@ -562,13 +552,13 @@ if __name__ == "__main__":
     plt.figure(figsize=(10, 10), facecolor='w')
     plt.subplot(221)
     plt.title('origin classfication')
-    plt.scatter(sample[:, 0][target_classify==0], sample[:, 1][target_classify==0],s=20)
+    plt.scatter(sample[:, 0][target_classify==0], sample[:, 1][target_classify==0],marker='.',s=20)
     plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],marker='x', s=20)
     plt.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2], marker='*', s=20)
 
     plt.subplot(222)
     plt.title('perfect ant classfication')
-    plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0], s=20)
+    plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0],marker='.', s=20)
     plt.scatter(sample[:, 0][pre == 1], sample[:, 1][pre == 1], marker='x', s=20)
     plt.scatter(sample[:, 0][pre == 2], sample[:, 1][pre == 2], marker='*', s=20)
 
@@ -603,11 +593,10 @@ if __name__ == "__main__":
     # print(optimizeAntRes)
     # print("不优化准确率：")
     # print(unOptimizeAntRes)
-    plt.savefig("./resimg/"+ str(time.time()) +".png")
 
     plt.show()
-    plt.figure(figsize=(5, 5), facecolor='w')
-    plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
-    plt.title("iter and target")
-    plt.savefig("./resimg/" +str(time.time()) + ".png")
-    plt.show()
+    # plt.figure(figsize=(5, 5), facecolor='w')
+    # plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    # plt.title("iter and target")
+    #
+    # plt.show()
