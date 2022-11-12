@@ -10,15 +10,17 @@ import operator
 
 from sklearn.metrics import precision_score
 
+start=time.perf_counter()
 SAMPLE_NUM = 500  # 样本数量
 FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-ITER_NUM = 10
+ITER_NUM = 1000
+
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=3)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=99)
 
 """
 信息素矩阵
@@ -302,7 +304,7 @@ def _update_tau_array():
 #         eco_target[NOW_ITER] = ant_target[0][1]
 
 import numpy
-
+from sklearn import metrics
 
 if __name__ == "__main__":
 
@@ -322,7 +324,12 @@ if __name__ == "__main__":
 
     pre = numpy.array(ant_array[ant_target[0][0]])
     optimizeAntRes = precision_score(target_classify, pre)
+    sc = str(metrics.silhouette_score(sample, pre))
 
+    f1 = metrics.f1_score(target_classify, pre)
+
+    ch = str(metrics.calinski_harabasz_score(sample, pre))
+    db = str(metrics.davies_bouldin_score(sample, pre))
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -343,16 +350,20 @@ if __name__ == "__main__":
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
     plt.show()
 
-    plt.savefig("./resimg/original_ant_clustering" + str(time.time()) +".png")
+    #plt.savefig("./resimg/original_ant_clustering" + str(time.time()) +".png")
 
     plt.figure(figsize=(5, 5), facecolor='w')
     plt.plot(range(ITER_NUM) , eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
     plt.title("iter and target")
     plt.show()
-    plt.savefig("./resimg/original_ant_clustering" +str(time.time()) + ".png")
+    #plt.savefig("./resimg/original_ant_clustering" +str(time.time()) + ".png")
     print("优化后准确率：")
 
     if (optimizeAntRes < 0.5):
         print(1 - optimizeAntRes)
     else:
         print(optimizeAntRes)
+    print('ch=' + ch)
+    print('db=' + db)
+    end = time.perf_counter()
+    print('time=' + str(end - start))

@@ -15,6 +15,8 @@ CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
 ITERATE_NUM = 30  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
+
+start=time.perf_counter()
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
@@ -79,7 +81,7 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = 1.25
+    r = 1.23
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -527,12 +529,10 @@ if __name__ == "__main__":
     optimizeAntRes = precision_score(target_classify, pre)
     sc = str(metrics.silhouette_score(sample , pre))
     ch = str(metrics.calinski_harabasz_score(sample,pre))
-    fm = str(metrics.fowlkes_mallows_score(target_classify,pre))
-    ho=str(metrics.homogeneity_score(target_classify,pre))
-    com=str(metrics.completeness_score(target_classify,pre))
-    v=str(metrics.v_measure_score(target_classify,pre))
-    mi=str(metrics.mutual_info_score(target_classify,pre))
 
+    f1=metrics.f1_score(target_classify,pre)
+
+    db=str(metrics.davies_bouldin_score(sample,pre))
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -560,12 +560,14 @@ if __name__ == "__main__":
     else:
         print(optimizeAntRes)
     print('sc=' + sc)
-    print('ch=' + ch)
-    print('fm=' + fm)
-    print('ho=' + ho)
-    print('com='+com)
-    print('v=' +v)
-    print('mi'+mi)
+
+    print('f1为')
+    if(f1<0.5):
+        print(1-f1)
+    else:
+        print(f1)
+    print('ch='+ch)
+    print('db='+db)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
     # # kmeans
@@ -596,3 +598,7 @@ if __name__ == "__main__":
     plt.title("iter and target")
     #plt.savefig("./resimg/" + str(time.time()) + ".png")
     plt.show()
+
+    end = time.perf_counter()
+    print('time=' + str(end - start))
+
