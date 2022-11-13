@@ -1,6 +1,7 @@
 import math
 import operator
 import random
+import threading
 import time
 
 import matplotlib.pyplot as plt
@@ -9,8 +10,8 @@ import numpy as np
 import sklearn.datasets as ds
 
 SAMPLE_NUM = 500  # 样本数量
-FEATURE_NUM = 3  # 每个样本的特征数量
-CLASS_NUM = 3  # 分类数量
+FEATURE_NUM = 5  # 每个样本的特征数量
+CLASS_NUM = 2  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
 ITERATE_NUM = 30  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
@@ -54,7 +55,7 @@ def _init_test_data(r):
     """
     for i in range(0, ANT_NUM):
         for j in range(0, SAMPLE_NUM):
-            tmp = random.randint(0, FEATURE_NUM)
+            tmp = random.randint(0, FEATURE_NUM - 1)
 
             ant_array[i][j] = tmp
 
@@ -74,31 +75,11 @@ def original_init_center():
 
 
 # 改进后
-def getR():
-    min_x = 0
-    max_x = 0
-    min_y = 0
-    max_y = 0
-    for i in range(SAMPLE_NUM):
-        if(sample[i][0] > sample[max_x][0]):
-            max_x = i
-        if (sample[i][0] < sample[min_x][0]):
-            min_x = i
-        if (sample[i][1] > sample[max_y][1]):
-            max_y = i
-        if (sample[i][1] < sample[max_y][1]):
-            min_y = i
-    xR = (sample[max_x][0]-sample[min_x][0])/CLASS_NUM
-    yR = (sample[max_y][1]-sample[min_y][1])/CLASS_NUM
-    return max(xR, yR)
-
-
 def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = getR()
-    print("r=",r)
+    r = 1.75
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -127,26 +108,13 @@ def pick_center_by_density(r):
             if dis <= r:
                 density_arr[i] += 1
     # 待改进，综合考虑密度与距离
-    count = 0
-    max_index = findMax(density_arr)
-    pick_arr = []
-    while i < CLASS_NUM:
-        if count == 0:
-            center_array[i][0] = sample[max_index][0]
-            center_array[i][1] = sample[max_index][1]
-            pick_arr.append(max_index)
-            count += 1
-            continue
-        else:
-            flag = 0
-            for pick in pick_arr:
-                if(dis_arr[max_index][pick] < r):
-                    flag = 1
-            if(flag == 0):
-                center_array[i][0] = sample[max_index][0]
-                center_array[i][1] = sample[max_index][1]
-                pick_arr.append(max_index)
-                count += 1
+
+    max_index = findMax(density_arr, dis_arr, r)
+    center_array[0][0] = sample[max_index[0]][0]
+    center_array[0][1] = sample[max_index[0]][1]
+
+    center_array[1][0] = sample[max_index[1]][0]
+    center_array[1][1] = sample[max_index[1]][1]
 
 
 def cal_dis(param, param1):
@@ -157,14 +125,20 @@ def cal_dis(param, param1):
     return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
 
 
-def findMax(density_arr):
+def findMax(density_arr, dis_arr, r):
     index1 = 0
+    index2 = 0
+    while (dis_arr[index1][index2] < r):
+        for i in range(len(density_arr)):
+            if density_arr[i] > density_arr[index1]:
+                index1 = i
+        density_arr[index1] = 0
+        for i in range(len(density_arr)):
+            if density_arr[i] > density_arr[index2]:
+                index2 = i
+        density_arr[index2] = 0
 
-    for i in range(len(density_arr)):
-        if density_arr[i] > density_arr[index1]:
-            index1 = i
-    density_arr[index1] = 0
-    return index1
+    return [index1, index2]
 
 
 def _get_best_class_by_tao_value(sampleid):
@@ -550,7 +524,7 @@ if __name__ == "__main__":
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
-    # optimizeAntRes = precision_score(target_classify, pre)
+    optimizeAntRes = precision_score(target_classify, pre)
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -563,23 +537,20 @@ if __name__ == "__main__":
     plt.subplot(221)
     plt.title('origin classfication')
     plt.scatter(sample[:, 0][target_classify==0], sample[:, 1][target_classify==0],s=20)
-    plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],marker='x', s=20)
-    plt.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2], marker='*', s=20)
+    plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],marker='x',s=20)
 
     plt.subplot(222)
     plt.title('perfect ant classfication')
     plt.scatter(sample[:, 0][pre == 0], sample[:, 1][pre == 0], s=20)
     plt.scatter(sample[:, 0][pre == 1], sample[:, 1][pre == 1], marker='x', s=20)
-    plt.scatter(sample[:, 0][pre == 2], sample[:, 1][pre == 2], marker='*', s=20)
 
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
-    plt.plot(center_array[2][0], center_array[2][1], 'yo')
-    # print("优化后准确率：")
-    # if(optimizeAntRes<0.5):
-    #     print(1-optimizeAntRes)
-    # else:
-    #     print(optimizeAntRes)
+    print("优化后准确率：")
+    if(optimizeAntRes<0.5):
+        print(1-optimizeAntRes)
+    else:
+        print(optimizeAntRes)
 
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
