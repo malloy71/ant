@@ -8,11 +8,11 @@ import numpy
 import numpy as np
 import sklearn.datasets as ds
 
-SAMPLE_NUM = 100  # 样本数量
+SAMPLE_NUM = 50  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
 ANT_NUM = 200  # 蚂蚁数量
-ITERATE_NUM = 30  # 迭代次数
+ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
@@ -22,7 +22,7 @@ sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, cent
 """
 信息素矩阵
 """
-tao_array = [[random.random() for col in range(FEATURE_NUM)] for row in range(SAMPLE_NUM)]
+tao_array = [[[0 for col in range(FEATURE_NUM)] for row in range(SAMPLE_NUM)] for ant in range(ANT_NUM)]
 
 """
 蚁群解集
@@ -34,7 +34,7 @@ t_ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]  # �
 """
 聚类中心点
 """
-center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
+center_array = [[0 for col in range(FEATURE_NUM)] for row in range(5)]
 
 """
 当前轮次蚂蚁的目标函数值，前者是蚂蚁编号、后者是目标函数值
@@ -90,7 +90,7 @@ def getR():
             min_y = i
     xR = (sample[max_x][0]-sample[min_x][0])/CLASS_NUM
     yR = (sample[max_y][1]-sample[min_y][1])/CLASS_NUM
-    return max(xR, yR)-3
+    return max(xR, yR)
 
 
 def change_init_test_data():
@@ -98,26 +98,26 @@ def change_init_test_data():
     根据初始聚类中心，建立信息素矩阵
     """
     # r = getR()
-    r = 3
+    r = 3.2
     print("r=",r)
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for s in range(ANT_NUM):
         for i in range(SAMPLE_NUM):
             for j in range(CLASS_NUM):
-                dist[i][j] = cal_dis(sample[i], center_array[j])
+                ranIndex = random.randint(0, 4)
+                dist[i][j] = cal_dis(sample[i], center_array[ranIndex])
                 if(CLASS_NUM * dist[i][j] != 0):
 
-                    tao_array[i][j] = 1 / (CLASS_NUM * dist[i][j])
-            tmp=_get_best_class_by_tao_value(i)
+                    tao_array[s][i][j] = 1 / (CLASS_NUM * dist[i][j])
+            tmp=_get_best_class_by_tao_value(s,i)
             ant_array[s][i]=tmp
 
 
 
 # 改动点1：根据密度选取中心点
 def pick_center_by_density(r):
-    # 半径
-    # r = 2
+
     # 每个样本的密度
     density_arr = [0 for col in range(SAMPLE_NUM)]
     # 样本之间的距离矩阵
@@ -133,7 +133,7 @@ def pick_center_by_density(r):
     # 待改进，综合考虑密度与距离
     count = 0
     pick_arr = []
-    while count < CLASS_NUM:
+    while count < 5:
         max_index = findMax(density_arr)
         if count == 0:
             center_array[count][0] = sample[max_index][0]
@@ -144,7 +144,7 @@ def pick_center_by_density(r):
         else:
             flag = 0
             for pick in pick_arr:
-                if(dis_arr[max_index][pick] < r):
+                if(dis_arr[max_index][pick] < r-0.5):
                     flag = 1
             if(flag == 0):
                 center_array[count][0] = sample[max_index][0]
@@ -171,12 +171,12 @@ def findMax(density_arr):
     return index1
 
 
-def _get_best_class_by_tao_value(sampleid):
-    max_value = np.max(tao_array[sampleid])
+def _get_best_class_by_tao_value(antid,sampleid):
+    max_value = np.max(tao_array[antid][sampleid])
 
     for i in range(0, CLASS_NUM):
 
-        if max_value == tao_array[sampleid][i]:
+        if max_value == tao_array[antid][sampleid][i]:
             return i
 
 
@@ -189,8 +189,8 @@ def random_pick(some_list, probabilities):
     return item
 
 
-def _get_best_class_by_tao_probablity(sampleid):
-    tarray = np.array(tao_array[sampleid])
+def _get_best_class_by_tao_probablity(ant,sampleid):
+    tarray = np.array(tao_array[ant][sampleid])
 
     parray = tarray / np.sum(tarray)
 
@@ -206,14 +206,14 @@ def global_optimize():
 
             if r[i][j] > change_q:
 
-                tmp_index = _get_best_class_by_tao_value(j)
+                tmp_index = _get_best_class_by_tao_value(i,j)
 
                 # 选择该样本中信息素最高的做为分类
                 ant_array[i][j] = tmp_index
 
             else:
                 # 计算概率值，根据概率的大小来确定一个选项
-                tmp_index = _get_best_class_by_tao_probablity(j)
+                tmp_index = _get_best_class_by_tao_probablity(i,j)
 
                 ant_array[i][j] = tmp_index
 
@@ -248,17 +248,17 @@ def _global_search():
         # 判断是否保留这个临时解
         for j in range(0, SAMPLE_NUM):
 
-            if t_ant_array[ant_id][j] == 0:
+            if temp_array[ant_id][j] == 0:
                 # 与分类0的聚类点计算距离
                 f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
                 f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
                 target_value += math.sqrt(f1 + f2)
-            if t_ant_array[ant_id][j] == 1:
+            if temp_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
                 f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
                 f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
                 target_value += math.sqrt(f1 + f2)
-            if t_ant_array[ant_id][j] == 2:
+            if temp_array[ant_id][j] == 2:
                 f1 = math.pow((sample[j][0] - center_array[2][0]), 2)
                 f2 = math.pow((sample[j][1] - center_array[2][1]), 2)
                 target_value += math.sqrt(f1 + f2)
@@ -281,6 +281,7 @@ def _update_ant():
     # 1. 确定一个新的聚类中心
     f_value_feature_0 = 0
     f_value_feature_1 = 0
+    f_value_feature_2 = 0
 
     for i in range(0, CLASS_NUM):
 
@@ -295,15 +296,21 @@ def _update_ant():
                     f_num += 1
                     f_value_feature_0 += sample[k][0]  # 特征1
 
-                else:
-
+                if ant_array[j][k] == 1:
                     f_num += 1
                     f_value_feature_1 += sample[k][1]  # 特征2
 
+                if ant_array[j][k] == 2:
+
+                    f_num += 1
+                    f_value_feature_2 += sample[k][2]  # 特征3
+
         if i == 0:
             center_array[i][0] = f_value_feature_0 / f_num
-        else:
+        if i == 1:
             center_array[i][1] = f_value_feature_1 / f_num
+        if i == 2:
+            center_array[i][2] = f_value_feature_2 / f_num
 
         # print(center_array[i], f_num)
 
@@ -322,12 +329,16 @@ def _update_ant():
                 f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
                 target_value += math.sqrt(f1 + f2)
 
-            else:
+            if ant_array[i][j] == 1:
                 # 与分类1的聚类点计算距离
                 f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
                 f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
                 target_value += math.sqrt(f1 + f2)
-
+            if ant_array[i][j] == 2:
+                # 与分类3的聚类点计算距离
+                f1 = math.pow((sample[j][0] - center_array[2][0]), 2)
+                f2 = math.pow((sample[j][1] - center_array[2][1]), 2)
+                target_value += math.sqrt(f1 + f2)
                 # 保存蚂蚁i当前的目标函数
         ant_target[i] = (i, target_value)
 
@@ -336,22 +347,18 @@ def _judge_sample(sampleid):
     """
     计算与当前聚类点的举例，判断该sample应所属的归类
     """
-    target_value_0 = 0
-    target_value_1 = 0
+    nearly = 0
+    minDis = 100
+    for i in range(CLASS_NUM):
 
-    f1 = math.pow((sample[sampleid][0] - center_array[0][0]), 2)
-    f2 = math.pow((sample[sampleid][1] - center_array[0][1]), 2)
-    target_value_0 = math.sqrt(f1 + f2)
+        f1 = math.pow((sample[sampleid][0] - center_array[nearly][0]), 2)
+        f2 = math.pow((sample[sampleid][1] - center_array[nearly][1]), 2)
+        dis1 = math.sqrt(f1 + f2)
 
-    f1 = math.pow((sample[sampleid][0] - center_array[1][0]), 2)
-    f2 = math.pow((sample[sampleid][1] - center_array[1][1]), 2)
-    target_value_1 = math.sqrt(f1 + f2)
-
-    if target_value_0 > target_value_1:
-        return 1
-    else:
-        return 0
-
+        if(dis1 < minDis):
+            minDis = dis1
+            nearly = i
+    return nearly
 
 #  原局部搜索
 def _local_search():
@@ -440,62 +447,66 @@ def _update_tau_array():
     """
     更新信息素表
     """
-    for i in range(0, SAMPLE_NUM):
+    for n in range(0,ANT_NUM):
 
-        for j in range(0, CLASS_NUM):
+        for i in range(0, SAMPLE_NUM):
 
-            tmp = tao_array[i][j]  # 当前的信息素
+            for j in range(0, CLASS_NUM):
 
-            tmp = (1 - change_rho) * tmp  # 处理信息素挥发
+                tmp = tao_array[n][i][j]  # 当前的信息素
 
-            J = 0
+                tmp = (1 - change_rho) * tmp  # 处理信息素挥发
 
-            # 处理信息素浓度增加
-            for k in range(0, ANT_NUM):
+                J = 0
 
-                if ant_array[k][i] == j:
-                    f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
-                    f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
-                    J += math.sqrt(f1 + f2)
+                # 处理信息素浓度增加
+                for k in range(0, ANT_NUM):
 
-            if J != 0:
-                tmp += Q / J
+                    if ant_array[k][i] == j:
+                        f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
+                        f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
+                        J += math.sqrt(f1 + f2)
 
-                # print(tmp, Q/J)
+                if J != 0:
+                    tmp += Q / J
 
-            tao_array[i][j] = tmp
+                    # print(tmp, Q/J)
+
+                tao_array[n][i][j] = tmp
 
     # print(np.var(tao_array))
 
 
 # 改进更新信息素表
 def change_update_tau_array():
-    for i in range(0, SAMPLE_NUM):
+    for n in range(0, ANT_NUM):
 
-        for j in range(0, CLASS_NUM):
-            tmp = tao_array[i][j]  # 当前的信息素
-            rou = (ITERATE_NUM - NOW_ITER) / ITERATE_NUM  # 此轮挥发系数
-            if rou > 0.02:
-                tmp = rou * tmp  # 处理信息素挥发
-            else:
-                tmp = 0.02 * tmp
+        for i in range(0, SAMPLE_NUM):
 
-            J = 0
+            for j in range(0, CLASS_NUM):
+                tmp = tao_array[n][i][j]  # 当前的信息素
+                rou = (ITERATE_NUM - NOW_ITER) / ITERATE_NUM  # 此轮挥发系数
+                if rou > 0.02:
+                    tmp = rou * tmp  # 处理信息素挥发
+                else:
+                    tmp = 0.02 * tmp
 
-            # 处理信息素浓度增加
-            for k in range(0, ANT_NUM):
+                J = 0
 
-                if ant_array[k][i] == j:
-                    f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
-                    f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
-                    J += math.sqrt(f1 + f2)
+                # 处理信息素浓度增加
+                for k in range(0, ANT_NUM):
 
-            if J != 0:
-                tmp += Q / J
+                    if ant_array[k][i] == j:
+                        f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
+                        f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
+                        J += math.sqrt(f1 + f2)
 
-                # print(tmp, Q/J)
+                if J != 0:
+                    tmp += Q / J
 
-            tao_array[i][j] = tmp
+                    # print(tmp, Q/J)
+
+                tao_array[n][i][j] = tmp
 
 
 from sklearn.cluster import KMeans
@@ -533,14 +544,14 @@ if __name__ == "__main__":
         _update_ant()
         global_optimize()
         # _global_search()
-        # _local_search()
-        change_local_search()
+        _local_search()
+        # change_local_search()
         _update_tau_array()
-        # !!!!change_update_tau_array()
+        # change_update_tau_array()
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
-    # optimizeAntRes = precision_score(target_classify, pre)
+    optimizeAntRes = precision_score(target_classify, pre, average="macro")
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -565,6 +576,7 @@ if __name__ == "__main__":
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
     plt.plot(center_array[2][0], center_array[2][1], 'yo')
+    print(optimizeAntRes)
     # print("优化后准确率：")
     # if(optimizeAntRes<0.5):
     #     print(1-optimizeAntRes)
