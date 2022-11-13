@@ -471,24 +471,24 @@ import original_test
 from sklearn.metrics import precision_score
 
 
-def run_batch(r):
-    _init_test_data(r)
-
-    for i in range(0, ITERATE_NUM):
-        _update_ant()
-        _global_search()
-        _local_search()
-
-        _update_tau_array()
+# def run_batch(r):
+#     _init_test_data(r)
+#
+#     for i in range(0, ITERATE_NUM):
+#         _update_ant()
+#         _global_search()
+#         _local_search()
+#
+#         _update_tau_array()
 
     # 结果集
-    pre = ant_array[ant_target[0][0]]
-    optimizeAntRes = precision_score(target_classify, pre)
-
-    if (optimizeAntRes > 0.9):
-        print("--------------------important!!!!" + "Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
-    else:
-        print("Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
+    # pre = ant_array[ant_target[0][0]]
+    # optimizeAntRes = precision_score(target_classify, pre)
+    #
+    # if (optimizeAntRes > 0.9):
+    #     print("--------------------important!!!!" + "Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
+    # else:
+    #     print("Current OptimizeAntRes:" + str(optimizeAntRes) + "---r:" + str(r))
 
 
 if __name__ == "__main__":
@@ -508,19 +508,19 @@ if __name__ == "__main__":
     #     i+=1
 
     r = 2.5
-    # _init_test_data(r)
-    change_init_test_data()
+    _init_test_data(r)
+    # change_init_test_data()
     eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant()
-        # global_optimize()
-        _global_search()
-        # _local_search()
-        change_local_search()
-        # _update_tau_array()
-        change_update_tau_array()
+        global_optimize()
+        # _global_search()
+        _local_search()
+        # change_local_search()
+        _update_tau_array()
+        # change_update_tau_array()
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
@@ -574,11 +574,11 @@ if __name__ == "__main__":
     # print(optimizeAntRes)
     # print("不优化准确率：")
     # print(unOptimizeAntRes)
-    plt.savefig("./resimg/"+ str(time.time()) +".png")
+    # plt.savefig("./resimg/"+ str(time.time()) +".png")
 
     plt.show()
     plt.figure(figsize=(5, 5), facecolor='w')
     plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
     plt.title("iter and target")
-    plt.savefig("./resimg/" +str(time.time()) + ".png")
+    # plt.savefig("./resimg/" +str(time.time()) + ".png")
     plt.show()
