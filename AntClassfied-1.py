@@ -81,6 +81,7 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
+
     r = 1.23
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
