@@ -12,7 +12,7 @@ SAMPLE_NUM = 100  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3 # 分类数量
 ANT_NUM = 10  # 蚂蚁数量
-ITERATE_NUM = 50  # 迭代次数
+ITERATE_NUM = 200  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
@@ -100,9 +100,10 @@ def change_init_test_data():
     # r = getR()
     r = 3.2
     print("r=",r)
-    pick_center_by_density(r)
+
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for s in range(ANT_NUM):
+        pick_center_by_density(r)
         for i in range(SAMPLE_NUM):
             for j in range(CLASS_NUM):
                 # ranIndex = random.randint(0, 4)
@@ -338,63 +339,40 @@ def _update_ant():
     #             ant_array[i][j] = tmp_index
 
     # 1. 确定一个新的聚类中心
-    f_value_feature_0 = [0 for e in range(FEATURE_NUM)]
-    f_value_feature_1 = [0 for e in range(FEATURE_NUM)]
-    f_value_feature_2 = [0 for e in range(FEATURE_NUM)]
+    f_value_feature_0 = 0
+    f_value_feature_1 = 0
+    f_value_feature_2 = 0
 
-    # for i in range(0, CLASS_NUM):
-    #
-    #     f_num = 0
-    #
-    #     # 三个属性
-    #     for j in range(0, ANT_NUM):
-    #
-    #         for k in range(0, SAMPLE_NUM):
-    #             if ant_array[j][k] == 0:
-    #
-    #                 f_num += 1
-    #                 f_value_feature_0 += sample[k][0]  # 特征1
-    #
-    #             else:
-    #
-    #                 f_num += 1
-    #                 f_value_feature_1 += sample[k][1]  # 特征2
-    #
-    #         if i == 0:
-    #             center_array[i][0] = f_value_feature_0 / f_num
-    #         else:
-    #             center_array[i][1] = f_value_feature_1 / f_num
+    for i in range(0, CLASS_NUM):
 
-        #         if ant_array[j][k] == 0:
-        #
-        #             f_num += 1
-        #             f_value_feature_0[0] += sample[k][0]  # 特征1
-        #             f_value_feature_0[1] += sample[k][1]
-        #             f_value_feature_0[2] += sample[k][2]
-        #
-        #         elif ant_array[j][k] == 1:
-        #             f_num += 1
-        #             f_value_feature_1[0] += sample[k][0]  # 特征2
-        #             f_value_feature_1[1] += sample[k][1]
-        #             f_value_feature_1[2] += sample[k][2]
-        #
-        #         elif ant_array[j][k] == 2:
-        #
-        #             f_num += 1
-        #             f_value_feature_2[0] += sample[k][0]  # 特征3
-        #             f_value_feature_2[1] += sample[k][1]
-        #             f_value_feature_2[2] += sample[k][2]
-        #
-        # # 中心矩阵
-        # for j in range(FEATURE_NUM):
-        #     if i == 0:
-        #         center_array[i][j] = f_value_feature_0[j] / f_num
-        #     elif i == 1:
-        #         center_array[i][j] = f_value_feature_1[j] / f_num
-        #     elif i == 2:
-        #         center_array[i][j] = f_value_feature_2[j] / f_num
+        f_num_0 = 0
+        f_num_1 = 0
+        f_num_2 = 0
 
-        # print(center_array[i], f_num)
+        # 三个属性
+        for j in range(0, ANT_NUM):
+
+            for k in range(0, SAMPLE_NUM):
+                if ant_array[j][k] == 0:
+
+                    f_num_0 += 1
+                    f_value_feature_0 += sample[k][0]  # 特征1
+
+                elif ant_array[j][k] == 1:
+
+                    f_num_1 += 1
+                    f_value_feature_1 += sample[k][1]  # 特征2
+                elif ant_array[j][k] == 2:
+
+                    f_num_2 += 1
+                    f_value_feature_2 += sample[k][2]  # 特征3
+
+            if i == 0 and f_num_0 != 0:
+                center_array[i][0] = f_value_feature_0 / f_num_0
+            elif i == 1 and f_num_1 != 0:
+                center_array[i][1] = f_value_feature_1 / f_num_1
+            elif i == 2 and f_num_2 != 0:
+                center_array[i][2] = f_value_feature_2 / f_num_2
 
     # 2. 根据新的聚类中心计算每个蚂蚁的目标函数
 
@@ -629,12 +607,13 @@ if __name__ == "__main__":
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
-        _update_ant()
+
         # global_optimize()
         _global_search()
         # _local_search()
         change_local_search()
         # _update_tau_array()
+        _update_ant()
         change_update_tau_array()
 
         eco_target[NOW_ITER] = ant_target[0][1]
