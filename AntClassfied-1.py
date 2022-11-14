@@ -79,7 +79,7 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = 1.75
+    r = 1.23
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -508,23 +508,23 @@ if __name__ == "__main__":
     #     i+=1
 
     r = 2.5
-    _init_test_data(r)
-    # change_init_test_data()
+    # _init_test_data(r)
+    change_init_test_data()
     eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant()
-        global_optimize()
-        # _global_search()
-        _local_search()
-        # change_local_search()
-        _update_tau_array()
-        # change_update_tau_array()
+        # global_optimize()
+        _global_search()
+        # _local_search()
+        change_local_search()
+        # _update_tau_array()
+        change_update_tau_array()
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
-    optimizeAntRes = precision_score(target_classify, pre)
+    # optimizeAntRes = precision_score(target_classify, pre,average='binary')
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -547,10 +547,10 @@ if __name__ == "__main__":
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
     print("优化后准确率：")
-    if(optimizeAntRes<0.5):
-        print(1-optimizeAntRes)
-    else:
-        print(optimizeAntRes)
+    # if(optimizeAntRes<0.5):
+    #     print(1-optimizeAntRes)
+    # else:
+    #     print(optimizeAntRes)
 
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
