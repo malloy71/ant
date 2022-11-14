@@ -8,10 +8,10 @@ import numpy
 import numpy as np
 import sklearn.datasets as ds
 
-SAMPLE_NUM = 50  # 样本数量
+SAMPLE_NUM = 30  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
-ANT_NUM = 200  # 蚂蚁数量
+ANT_NUM = 10  # 蚂蚁数量
 ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
@@ -34,7 +34,7 @@ t_ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]  # �
 """
 聚类中心点
 """
-center_array = [[0 for col in range(FEATURE_NUM)] for row in range(5)]
+center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
 
 """
 当前轮次蚂蚁的目标函数值，前者是蚂蚁编号、后者是目标函数值
@@ -105,8 +105,8 @@ def change_init_test_data():
     for s in range(ANT_NUM):
         for i in range(SAMPLE_NUM):
             for j in range(CLASS_NUM):
-                ranIndex = random.randint(0, 4)
-                dist[i][j] = cal_dis(sample[i], center_array[ranIndex])
+                # ranIndex = random.randint(0, 4)
+                dist[i][j] = cal_dis(sample[i], center_array[j])
                 if(CLASS_NUM * dist[i][j] != 0):
 
                     tao_array[s][i][j] = 1 / (CLASS_NUM * dist[i][j])
@@ -133,24 +133,41 @@ def pick_center_by_density(r):
     # 待改进，综合考虑密度与距离
     count = 0
     pick_arr = []
+    max_index = findMax(density_arr)
+    for k in range(SAMPLE_NUM):
+        if density_arr[k]==max_index:
+            pick_arr.append(k)
+    #随机选取三个下标
+    for i in range(len(pick_arr)):
+        pick_now=random.sample(pick_arr,CLASS_NUM)
+        for pick_1 in pick_now:
+            for pick_2 in pick_now:
+                if pick_2==pick_1:
+                    continue
+                if dis_arr[pick_1][pick_2] > r - 0.5:
+                    break
+
+                # flag = 1
     while count < 5:
         max_index = findMax(density_arr)
-        if count == 0:
-            center_array[count][0] = sample[max_index][0]
-            center_array[count][1] = sample[max_index][1]
-            pick_arr.append(max_index)
-            count += 1
-            continue
-        else:
-            flag = 0
-            for pick in pick_arr:
-                if(dis_arr[max_index][pick] < r-0.5):
-                    flag = 1
-            if(flag == 0):
-                center_array[count][0] = sample[max_index][0]
-                center_array[count][1] = sample[max_index][1]
+        for i in range(CLASS_NUM):
+            for j in range(FEATURE_NUM):
+                if count == 0:
+                center_array[i][j] = sample[max_index][j]
                 pick_arr.append(max_index)
                 count += 1
+                continue
+                else:
+                    flag = 0
+                    for pick in pick_arr:
+                        if(dis_arr[max_index][pick] < r-0.5):
+                            flag = 1
+
+                    if(flag == 0):
+                        center_array[count][j] = sample[max_index][j]
+
+                        pick_arr.append(max_index)
+                        count += 1
 
 
 def cal_dis(param, param1):
@@ -279,14 +296,15 @@ def _update_ant():
 
     # print(ant_array[i])
     # 1. 确定一个新的聚类中心
-    f_value_feature_0 = 0
-    f_value_feature_1 = 0
-    f_value_feature_2 = 0
+    f_value_feature_0 = [0 for e in range(FEATURE_NUM)]
+    f_value_feature_1 = [0 for e in range(FEATURE_NUM)]
+    f_value_feature_2 = [0 for e in range(FEATURE_NUM)]
 
     for i in range(0, CLASS_NUM):
 
         f_num = 0
 
+        # 三个属性
         for j in range(0, ANT_NUM):
 
             for k in range(0, SAMPLE_NUM):
@@ -294,23 +312,31 @@ def _update_ant():
                 if ant_array[j][k] == 0:
 
                     f_num += 1
-                    f_value_feature_0 += sample[k][0]  # 特征1
+                    f_value_feature_0[0] += sample[k][0]  # 特征1
+                    f_value_feature_0[1] += sample[k][1]
+                    f_value_feature_0[2] += sample[k][2]
 
                 if ant_array[j][k] == 1:
                     f_num += 1
-                    f_value_feature_1 += sample[k][1]  # 特征2
+                    f_value_feature_1[0] += sample[k][0]  # 特征2
+                    f_value_feature_1[1] += sample[k][1]
+                    f_value_feature_1[2] += sample[k][2]
 
                 if ant_array[j][k] == 2:
 
                     f_num += 1
-                    f_value_feature_2 += sample[k][2]  # 特征3
+                    f_value_feature_2[0] += sample[k][0]  # 特征3
+                    f_value_feature_2[1] += sample[k][1]
+                    f_value_feature_2[2] += sample[k][2]
 
-        if i == 0:
-            center_array[i][0] = f_value_feature_0 / f_num
-        if i == 1:
-            center_array[i][1] = f_value_feature_1 / f_num
-        if i == 2:
-            center_array[i][2] = f_value_feature_2 / f_num
+        # 中心矩阵
+        for j in range(FEATURE_NUM):
+            if i == 0:
+                center_array[i][j] = f_value_feature_0[j] / f_num
+            if i == 1:
+                center_array[i][j] = f_value_feature_1[j] / f_num
+            if i == 2:
+                center_array[i][j] = f_value_feature_2[j] / f_num
 
         # print(center_array[i], f_num)
 
