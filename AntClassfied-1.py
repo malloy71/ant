@@ -145,29 +145,30 @@ def pick_center_by_density(r):
                 if pick_2==pick_1:
                     continue
                 if dis_arr[pick_1][pick_2] > r - 0.5:
-                    break
+                    center_array[i][j]=dis_arr[pick_1][pick_2]
+        break
 
                 # flag = 1
-    while count < 5:
-        max_index = findMax(density_arr)
-        for i in range(CLASS_NUM):
-            for j in range(FEATURE_NUM):
-                if count == 0:
-                center_array[i][j] = sample[max_index][j]
-                pick_arr.append(max_index)
-                count += 1
-                continue
-                else:
-                    flag = 0
-                    for pick in pick_arr:
-                        if(dis_arr[max_index][pick] < r-0.5):
-                            flag = 1
-
-                    if(flag == 0):
-                        center_array[count][j] = sample[max_index][j]
-
-                        pick_arr.append(max_index)
-                        count += 1
+    # while count < 5:
+    #     max_index = findMax(density_arr)
+    #     for i in range(CLASS_NUM):
+    #         for j in range(FEATURE_NUM):
+    #             if count == 0:
+    #             center_array[i][j] = sample[max_index][j]
+    #             pick_arr.append(max_index)
+    #             count += 1
+    #             continue
+    #             else:
+    #                 flag = 0
+    #                 for pick in pick_arr:
+    #                     if(dis_arr[max_index][pick] < r-0.5):
+    #                         flag = 1
+    #
+    #                 if(flag == 0):
+    #                     center_array[count][j] = sample[max_index][j]
+    #
+    #                     pick_arr.append(max_index)
+    #                     count += 1
 
 
 def cal_dis(param, param1):
