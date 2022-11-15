@@ -316,91 +316,73 @@ def _global_search():
             ant_array[ant_id] = temp_array[ant_id]
 
 
-def _update_ant():
+def _update_ant_target():
     """
     更新目标函数值
     """
-    # r = np.random.random((ANT_NUM, SAMPLE_NUM))
-    #
-    # for i in range(0, ANT_NUM):
-    #     for j in range(0, SAMPLE_NUM):
-    #
-    #         if r[i][j] > change_q:
-    #
-    #             tmp_index = _get_best_class_by_tao_value(i,j)
-    #
-    #             # 选择该样本中信息素最高的做为分类
-    #             ant_array[i][j] = tmp_index
-    #
-    #         else:
-    #             # 计算概率值，根据概率的大小来确定一个选项
-    #             tmp_index = _get_best_class_by_tao_probablity(i,j)
-    #
-    #             ant_array[i][j] = tmp_index
-
+    temp_center_array = [[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)]
     # 1. 确定一个新的聚类中心
     f_value_feature_0 = 0
     f_value_feature_1 = 0
     f_value_feature_2 = 0
 
-    for i in range(0, CLASS_NUM):
-
-        f_num_0 = 0
-        f_num_1 = 0
-        f_num_2 = 0
+    # 目标函数值：属于每个簇的每个样本的每个属性的欧氏距离之和
+    # 例如第一簇的所有样本（2，4，7）的三个属性求欧氏距离+第二个簇的所有样本（1，5）的三个属性欧氏距离之和+。。。
+    # :[2,2]  7:[3,3]
+    # 根号下（1-center0）的平方+
 
         # 三个属性
-        for j in range(0, ANT_NUM):
-
-            for k in range(0, SAMPLE_NUM):
-                if ant_array[j][k] == 0:
-
-                    f_num_0 += 1
-                    f_value_feature_0 += sample[k][0]  # 特征1
-
-                elif ant_array[j][k] == 1:
-
-                    f_num_1 += 1
-                    f_value_feature_1 += sample[k][1]  # 特征2
-                elif ant_array[j][k] == 2:
-
-                    f_num_2 += 1
-                    f_value_feature_2 += sample[k][2]  # 特征3
-
-            if i == 0 and f_num_0 != 0:
-                center_array[i][0] = f_value_feature_0 / f_num_0
-            elif i == 1 and f_num_1 != 0:
-                center_array[i][1] = f_value_feature_1 / f_num_1
-            elif i == 2 and f_num_2 != 0:
-                center_array[i][2] = f_value_feature_2 / f_num_2
-
-    # 2. 根据新的聚类中心计算每个蚂蚁的目标函数
-
     for i in range(0, ANT_NUM):
-
         target_value = 0
-
         for j in range(0, SAMPLE_NUM):
-
             if ant_array[i][j] == 0:
-
                 # 与分类0的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[0][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[0][1]), 2)
-                target_value += math.sqrt(f1 + f2)
+                target_value += cal_dis(sample[j], center_array[0])
 
             elif ant_array[i][j] == 1:
                 # 与分类1的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[1][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
-                target_value += math.sqrt(f1 + f2)
+                target_value += cal_dis(sample[j], center_array[1])
+
             elif ant_array[i][j] == 2:
                 # 与分类3的聚类点计算距离
-                f1 = math.pow((sample[j][0] - center_array[2][0]), 2)
-                f2 = math.pow((sample[j][1] - center_array[2][1]), 2)
-                target_value += math.sqrt(f1 + f2)
-                # 保存蚂蚁i当前的目标函数
+                target_value += cal_dis(sample[j], center_array[2])
         ant_target[i] = (i, target_value)
+
+    # for j in range(0, ANT_NUM):
+    #     f_num_0 = 0
+    #     f_num_1 = 0
+    #     f_num_2 = 0
+    #     target_value = 0
+    #     for i in range(CLASS_NUM):
+    #         for k in range(0, SAMPLE_NUM):
+    #             if ant_array[j][k] == 0:
+    #
+    #                 f_num_0 += 1
+    #                 f_value_feature_0 += sample[k][0]  # 特征1
+    #
+    #             elif ant_array[j][k] == 1:
+    #
+    #                 f_num_1 += 1
+    #                 f_value_feature_1 += sample[k][1]  # 特征2
+    #             elif ant_array[j][k] == 2:
+    #
+    #                 f_num_2 += 1
+    #                 f_value_feature_2 += sample[k][2]  # 特征3
+    #
+    #         if i == 0 and f_num_0 != 0:
+    #             temp_center_array[i][0] = f_value_feature_0 / f_num_0
+    #         elif i == 1 and f_num_1 != 0:
+    #             temp_center_array[i][1] = f_value_feature_1 / f_num_1
+    #         elif i == 2 and f_num_2 != 0:
+    #             temp_center_array[i][2] = f_value_feature_2 / f_num_2
+
+# def update_ant_center():
+    # 中心矩阵：行为簇数，列为属性
+    # 求的是属于每个簇的每个样本的各个属性的平均值
+    # 例如属于第一个簇的（2，4，7）样本的三个属性的平均值，第二个簇（1，5）三个属性的平均值，。。。
+
+
+
 
 
 def _judge_sample(sampleid):
@@ -508,6 +490,7 @@ def change_local_search():
             ant_array[ant_id] = t_ant_array[ant_id]
 
 
+
 # 原更新信息素表
 def _update_tau_array():
     """
@@ -607,13 +590,13 @@ if __name__ == "__main__":
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
-
+        _update_ant_target()
         # global_optimize()
         _global_search()
         # _local_search()
         change_local_search()
         # _update_tau_array()
-        _update_ant()
+
         change_update_tau_array()
 
         eco_target[NOW_ITER] = ant_target[0][1]
