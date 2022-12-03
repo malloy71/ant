@@ -11,7 +11,7 @@ import sklearn.datasets as ds
 SAMPLE_NUM = 100  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3 # 分类数量
-ANT_NUM = 20  # 蚂蚁数量
+ANT_NUM = 30  # 蚂蚁数量
 ITERATE_NUM = 100  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
@@ -44,7 +44,7 @@ ant_target = [(0, 0) for col in range(ANT_NUM)]  # 生成ANT_NUM个（0，0）
 change_q = 0.3  # 更新蚁群时的转换规则参数，表示何种比例直接根据信息素矩阵进行更新
 L = int(ANT_NUM / 5)  # 局部搜索的蚂蚁数量
 change_jp = 0.3  # 局部搜索时该样本是否变动
-change_rho = 0.02  # 挥发参数
+change_rho = 0.98  # 挥发参数
 Q = 0.1  # 信息素浓度参数
 
 
@@ -97,8 +97,8 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    r = getR()
-    # r = 4.9
+    # r = getR()
+    r = 2
     print("r=",r)
 
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
@@ -241,7 +241,7 @@ def _global_search():
     temp_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]
     # 禁忌表，在同一轮迭代中，交换过的蚂蚁，不能再次交换
     taboo = []
-    for i in range(int(ANT_NUM / 5)):
+    for i in range(int(ANT_NUM / 2)):
         peek_ant1 = 0
         peek_ant2 = 0
         # 交换index1只蚂蚁与index2只蚂蚁特定位置上的值
@@ -300,8 +300,8 @@ def _global_search():
                 target_value += cal_dis(sample[j],center_array_temp[ant_id][2])
         t_target.append([ant_id,target_value])
 
-    # 根据目标函数值排序，选出一半去做更新
-    t_target.sort(key = lambda x:x[1])
+
+    # 根据目标函数值去做更新
     for target in t_target:
         ant = target[0]
         target = target[1]
@@ -310,8 +310,6 @@ def _global_search():
             ant_array[ant] = temp_array[ant]
             center_array[ant] = center_array_temp[ant]
             ant_target[ant] = (ant,target)
-
-
 
 
 def _update_ant_target():
@@ -344,7 +342,8 @@ def _update_ant_target():
             elif ant_array[i][j] == 2:
                 # 与分类3的聚类点计算距离
                 target_value += cal_dis(sample[j], center_array[i][2])
-        ant_target[i] = (i, target_value)
+        if(ant_target[i][1] == 0 or target_value < ant_target[i][1]):
+            ant_target[i] = (i, target_value)
 
     # for j in range(0, ANT_NUM):
     #     f_num_0 = 0
@@ -574,8 +573,8 @@ def _update_tau_array():
                 for k in range(0, ANT_NUM):
 
                     if ant_array[k][i] == j:
-                        f1 = math.pow((sample[i][0] - center_array[j][0]), 2)
-                        f2 = math.pow((sample[i][1] - center_array[j][1]), 2)
+                        f1 = math.pow((sample[i][0] - center_array[n][j][0]), 2)
+                        f2 = math.pow((sample[i][1] - center_array[n][j][1]), 2)
                         J += math.sqrt(f1 + f2)
 
                 if J != 0:
@@ -584,7 +583,9 @@ def _update_tau_array():
                     # print(tmp, Q/J)
 
                 tao_array[n][i][j] = tmp
-
+            # 根据信息素矩阵更新解字符串
+            tmp = _get_best_class_by_tao_value(n, i)
+            ant_array[n][i] = tmp
     # print(np.var(tao_array))
 
 
@@ -633,8 +634,8 @@ from sklearn.metrics import precision_score
 if __name__ == "__main__":
 
     change_init_test_data()
-    eco_target = [0 for col in range(ITERATE_NUM)]
-    for NOW_ITER in range(0, ITERATE_NUM):
+    eco_target = []
+    for NOW_ITER in range(1, ITERATE_NUM):
         ant_target.sort(key=lambda x:x[1])
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
@@ -643,11 +644,12 @@ if __name__ == "__main__":
         _global_search()
         # _local_search()
         change_local_search()
-        # _update_tau_array()
-        update_ant_center()
-        change_update_tau_array()
 
-        eco_target[NOW_ITER] = ant_target[0][1]
+        update_ant_center()
+        # change_update_tau_array()
+        _update_tau_array()
+
+        eco_target.append(ant_target[0][1])
     # 结果集
     ant_target.sort(key=lambda x:x[1])
     pre = numpy.array(ant_array[ant_target[0][0]])
@@ -708,10 +710,9 @@ if __name__ == "__main__":
     # print(optimizeAntRes)
     # print("不优化准确率：")
     # print(unOptimizeAntRes)
-
     plt.show()
     plt.figure(figsize=(5, 5), facecolor='w')
-    plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    plt.plot(range(ITERATE_NUM-1), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
     plt.title("iter and target")
 
     plt.show()
