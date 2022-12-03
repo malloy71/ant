@@ -12,7 +12,7 @@ SAMPLE_NUM = 100  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3 # 分类数量
 ANT_NUM = 20  # 蚂蚁数量
-ITERATE_NUM = 200  # 迭代次数
+ITERATE_NUM = 100  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
@@ -97,8 +97,8 @@ def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
-    # r = getR()
-    r = 3
+    r = getR()
+    # r = 4.9
     print("r=",r)
 
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
@@ -241,7 +241,7 @@ def _global_search():
     temp_array = [[0 for col in range(SAMPLE_NUM)] for row in range(ANT_NUM)]
     # 禁忌表，在同一轮迭代中，交换过的蚂蚁，不能再次交换
     taboo = []
-    for i in range(int(ANT_NUM / 2)):
+    for i in range(int(ANT_NUM / 5)):
         peek_ant1 = 0
         peek_ant2 = 0
         # 交换index1只蚂蚁与index2只蚂蚁特定位置上的值
@@ -283,8 +283,9 @@ def _global_search():
             if len(f_value_feature_2) > 0:
                 center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
 
-
+    t_target = []
     for ant_id in taboo:
+
         target_value = 0
         # 判断是否保留这个临时解
         for j in range(0, SAMPLE_NUM):
@@ -297,10 +298,20 @@ def _global_search():
                 target_value += cal_dis(sample[j],center_array_temp[ant_id][1])
             if temp_array[ant_id][j] == 2:
                 target_value += cal_dis(sample[j],center_array_temp[ant_id][2])
+        t_target.append([ant_id,target_value])
 
-        if target_value < ant_target[i][1]:
+    # 根据目标函数值排序，选出一半去做更新
+    t_target.sort(key = lambda x:x[1])
+    for target in t_target:
+        ant = target[0]
+        target = target[1]
+        if target < ant_target[ant][1]:
             # 更新最优解
-            ant_array[ant_id] = temp_array[ant_id]
+            ant_array[ant] = temp_array[ant]
+            center_array[ant] = center_array_temp[ant]
+            ant_target[ant] = (ant,target)
+
+
 
 
 def _update_ant_target():
@@ -368,40 +379,32 @@ def update_ant_center():
     # 求的是属于每个簇的每个样本的各个属性的平均值
     # 例如属于第一个簇的（2，4，7）样本的三个属性的平均值，第二个簇（1，5）三个属性的平均值，。。。
 
-
-
-    # f_value_feature_0 = 0
-    # f_value_feature_1 = 0
-    # f_value_feature_2 = 0
-    # for i in range(0,ANT_NUM):
     #
-    #     f_num_0 = 0
-    #     f_num_1 = 0
-    #     f_num_2 = 0
+    # for i in range(ANT_NUM):
     #
     #     for j in range(0, CLASS_NUM):
-    #
+    #         f_value_feature_0 = []
+    #         f_value_feature_1 = []
+    #         f_value_feature_2 = []
     #         for k in range(0, SAMPLE_NUM):
+    #             if ant_array[i][k] != j:
+    #                 continue
     #
-    #             if ant_array[i][k] == 0:
-    #                 f_num_0 += 1
-    #                 f_value_feature_0 += sample[k][0]  # 簇1
+    #             f_value_feature_0.append(sample[k][0])   # 簇1
+    #             f_value_feature_1.append(sample[k][1])   # 簇2
+    #             f_value_feature_2.append(sample[k][2])   # 簇3
     #
-    #             elif ant_array[i][k] == 1:
-    #                 f_num_1 += 1
-    #                 f_value_feature_1 += sample[k][1]  # 簇2
-    #
-    #             elif ant_array[i][k] == 2:
-    #                 f_num_2 += 1
-    #                 f_value_feature_2 += sample[k][2]  # 簇3
-    #
-    #     if j == 0 and f_num_0 != 0:
-    #         center_array[i][j][0] = f_value_feature_0 / f_num_0
-    #     elif j == 1 and f_num_1 != 0:
-    #         center_array[i][j][0] = f_value_feature_1 / f_num_1
-    #     elif j == 2 and f_num_2 != 0:
-    #         center_array[i][j][0] = f_value_feature_2 / f_num_2
-    for i in range(ANT_NUM):
+    #         if len(f_value_feature_0) > 0:
+    #             center_array[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
+    #         if len(f_value_feature_1) > 0:
+    #             center_array[i][j][1] = sum(f_value_feature_1) / len(f_value_feature_1)
+    #         if len(f_value_feature_2) > 0:
+    #             center_array[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
+
+
+    center_array_temp = [[[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)] for ant in range(ANT_NUM)]
+
+    for i in range(0,ANT_NUM):
 
         for j in range(0, CLASS_NUM):
             f_value_feature_0 = []
@@ -416,11 +419,32 @@ def update_ant_center():
                 f_value_feature_2.append(sample[k][2])   # 簇3
 
             if len(f_value_feature_0) > 0:
-                center_array[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
+                center_array_temp[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
             if len(f_value_feature_1) > 0:
-                center_array[i][j][1] = sum(f_value_feature_1) / len(f_value_feature_1)
+                center_array_temp[i][j][1] = sum(f_value_feature_1) / len(f_value_feature_1)
             if len(f_value_feature_2) > 0:
-                center_array[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
+                center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
+
+
+    for ant_id in range(0, CLASS_NUM):
+        target_value = 0
+        # 判断是否保留这个临时解
+        for j in range(0, SAMPLE_NUM):
+
+            if ant_array[ant_id][j] == 0:
+                # 与分类0的聚类点计算距离
+                target_value += cal_dis(sample[j], center_array_temp[ant_id][0])
+            if ant_array[ant_id][j] == 1:
+                # 与分类1的聚类点计算距离
+                target_value += cal_dis(sample[j],center_array_temp[ant_id][1])
+            if ant_array[ant_id][j] == 2:
+                target_value += cal_dis(sample[j],center_array_temp[ant_id][2])
+
+        if target_value < ant_target[ant_id][1]:
+            # 更新中心矩阵
+            center_array[ant_id] = center_array_temp[ant_id]
+
+
 
 
 def _judge_sample(antid,sampleid):
@@ -480,7 +504,7 @@ def _local_search():
                 f2 = math.pow((sample[j][1] - center_array[1][1]), 2)
                 target_value += math.sqrt(f1 + f2)
 
-        if target_value < ant_target[i][1]:
+        if target_value < ant_target[ant_id][1]:
             # 更新最优解
             ant_array[ant_id] = t_ant_array[ant_id]
 
@@ -523,7 +547,7 @@ def change_local_search():
                 f2 = math.pow((sample[j][1] - center_array[i][2][1]), 2)
                 target_value += math.sqrt(f1 + f2)
 
-        if target_value < ant_target[i][1]:
+        if target_value < ant_target[ant_id][1]:
             # 更新最优解
             ant_array[ant_id] = t_ant_array[ant_id]
 
@@ -594,6 +618,9 @@ def change_update_tau_array():
                     # print(tmp, Q/J)
 
                 tao_array[n][i][j] = tmp
+        # 根据信息素矩阵更新解字符串
+        tmp = _get_best_class_by_tao_value(n, i)
+        ant_array[n][i] = tmp
 
 
 from sklearn.cluster import KMeans
@@ -608,6 +635,7 @@ if __name__ == "__main__":
     change_init_test_data()
     eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
+        ant_target.sort(key=lambda x:x[1])
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant_target()
@@ -621,6 +649,7 @@ if __name__ == "__main__":
 
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
+    ant_target.sort(key=lambda x:x[1])
     pre = numpy.array(ant_array[ant_target[0][0]])
     optimizeAntRes = precision_score(target_classify, pre, average="macro")
     colors1 = '#C0504D'
