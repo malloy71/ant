@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import pandas as pd
 
-SAMPLE_NUM = 300  # 样本数量
+SAMPLE_NUM = 150  # 样本数量
 FEATURE_NUM = 2  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
 ANT_NUM = 20  # 蚂蚁数量
