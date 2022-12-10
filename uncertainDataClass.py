@@ -39,8 +39,6 @@ if __name__ == '__main__':
             a_sample.append(sample[i])
             a_target.append(target_classify[i])
 
-    sample = np.hstack((X_pca, prob))
-
     a_res = Ant(len(a_sample),a_sample,a_target).run()
     KNN=KNeighborsClassifier(n_neighbors=3)
     model = KNN.fit(a_sample,a_res)
@@ -49,20 +47,17 @@ if __name__ == '__main__':
     all_sample = np.vstack((np.array(a_sample), np.array(k_sample)))
     all_target = np.hstack((a_res, np.array(k_res)))
 
-    plt.figure(figsize=(10, 10), facecolor='w')
-    plt.subplot(221)
-    plt.title('origin classfication')
-    plt.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], marker='.', s=20)
-    plt.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], marker='x', s=20)
-    plt.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], marker='*', s=20)
+    fig = plt.figure()
+    ax = fig.add_subplot(121, projection='3d')
+    ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],sample[:, 2][target_classify == 0], marker='.')
+    ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],sample[:, 2][target_classify == 1], marker='x')
+    ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],sample[:, 2][target_classify == 2], marker='*')
+    bx = fig.add_subplot(122, projection='3d')
+    bx.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], all_sample[:, 2][all_target == 0], marker='.')
+    bx.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], all_sample[:, 2][all_target == 1], marker='x')
+    bx.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], all_sample[:, 2][all_target == 2], marker='*')
 
-    plt.subplot(222)
-    plt.title('uncertain classfication')
-    plt.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], marker='.', s=20)
-    plt.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], marker='x', s=20)
-    plt.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], marker='*', s=20)
-
-    optimizeAntRes = precision_score(target_classify, all_target, average="micro")
+    optimizeAntRes = precision_score(a_target+k_target, all_target, average="micro")
 
     print("优化后准确率：")
     if (optimizeAntRes < 0.5):
