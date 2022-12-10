@@ -7,22 +7,36 @@ import matplotlib.pyplot as plt
 import numpy
 import numpy as np
 import sklearn.datasets as ds
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+import pandas as pd
 
 SAMPLE_NUM = 300  # 样本数量
-FEATURE_NUM = 3  # 每个样本的特征数量
-CLASS_NUM = 3 # 分类数量
+FEATURE_NUM = 2  # 每个样本的特征数量
+CLASS_NUM = 3  # 分类数量
 ANT_NUM = 20  # 蚂蚁数量
 ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=40)
+#sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=40)
+
+
+data = pd.read_csv('iris_data.csv')
+X = data.drop(['target', 'label'], axis=1)
+y = data.loc[:, 'label']
+# 预处理，将数据规范化
+X_norm = StandardScaler().fit_transform(X)
+pca = PCA(n_components=2)
+X_pca = pca.fit_transform(X_norm)
 
 # iris = ds.load_iris()
-
 # sample = iris.data
 # target_classify = iris.target
+
+sample = X_pca
+target_classify = data.loc[:, 'label']
 """
 信息素矩阵
 """
@@ -58,7 +72,7 @@ def _init_test_data():
     """
     for i in range(0, ANT_NUM):
         for j in range(0, SAMPLE_NUM):
-            tmp = random.randint(0, FEATURE_NUM-1)
+            tmp = random.randint(0, FEATURE_NUM - 1)
 
             ant_array[i][j] = tmp
 
@@ -84,7 +98,7 @@ def getR():
     min_y = 0
     max_y = 0
     for i in range(SAMPLE_NUM):
-        if(sample[i][0] > sample[max_x][0]):
+        if (sample[i][0] > sample[max_x][0]):
             max_x = i
         if (sample[i][0] < sample[min_x][0]):
             min_x = i
@@ -92,8 +106,8 @@ def getR():
             max_y = i
         if (sample[i][1] < sample[max_y][1]):
             min_y = i
-    xR = (sample[max_x][0]-sample[min_x][0])/CLASS_NUM
-    yR = (sample[max_y][1]-sample[min_y][1])/CLASS_NUM
+    xR = (sample[max_x][0] - sample[min_x][0]) / CLASS_NUM
+    yR = (sample[max_y][1] - sample[min_y][1]) / CLASS_NUM
     return max(xR, yR)
 
 
@@ -103,28 +117,26 @@ def change_init_test_data():
     """
     r = getR()
     # r = 2
-    print("r=",r)
+    print("r=", r)
 
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for s in range(ANT_NUM):
         r = r * 0.01 * s
-        pick_center_by_density(s,r)
+        pick_center_by_density(s, r)
         for i in range(SAMPLE_NUM):
             for j in range(CLASS_NUM):
                 # ranIndex = random.randint(0, 4)
                 dist[i][j] = cal_dis(sample[i], center_array[s][j])
-                if(CLASS_NUM * dist[i][j] != 0):
-
+                if (CLASS_NUM * dist[i][j] != 0):
                     tao_array[s][i][j] = 1 / (CLASS_NUM * dist[i][j])
-            tmp=_get_best_class_by_tao_value(s,i)
-            ant_array[s][i]=tmp
+            tmp = _get_best_class_by_tao_value(s, i)
+            ant_array[s][i] = tmp
 
     _init_test_data()
 
 
 # 改动点1：根据密度选取中心点
-def pick_center_by_density(antid,r):
-
+def pick_center_by_density(antid, r):
     # 每个样本的密度
     density_arr = [0 for col in range(SAMPLE_NUM)]
     # 样本之间的距离矩阵
@@ -142,7 +154,7 @@ def pick_center_by_density(antid,r):
     pick_arr_temp = []
     # 最终选取的中心点
     pick_arr = []
-    while(count < 3):
+    while (count < 3):
         # 最大值
         max_index = findMax(density_arr)
 
@@ -152,13 +164,13 @@ def pick_center_by_density(antid,r):
                 density_arr[k] = 0
         rand_pick = []
         # 随机选取三个下标
-        if(len(pick_arr_temp) >= CLASS_NUM*2):
-            rand_pick = random.sample(pick_arr_temp, CLASS_NUM*2)
+        if (len(pick_arr_temp) >= CLASS_NUM * 2):
+            rand_pick = random.sample(pick_arr_temp, CLASS_NUM * 2)
         else:
             rand_pick = random.sample(pick_arr_temp, len(pick_arr_temp))
 
         for pick in rand_pick:
-            if(count == 0):
+            if (count == 0):
                 center_array[antid][count][0] = sample[pick][0]
                 center_array[antid][count][1] = sample[pick][1]
                 center_array[antid][count][2] = sample[pick][2]
@@ -167,15 +179,16 @@ def pick_center_by_density(antid,r):
             elif count > 0 and count < CLASS_NUM:
                 flag = 0
                 for oldPick in pick_arr:
-                    if(dis_arr[oldPick][pick] < r):
+                    if (dis_arr[oldPick][pick] < r):
                         flag = 1
 
-                if(flag == 0):
+                if (flag == 0):
                     center_array[antid][count][0] = sample[pick][0]
                     center_array[antid][count][1] = sample[pick][1]
                     center_array[antid][count][2] = sample[pick][2]
                     pick_arr.append(pick)
                     count += 1
+
 
 def cal_dis(param, param1):
     x1 = param[0]
@@ -184,7 +197,8 @@ def cal_dis(param, param1):
     x2 = param1[0]
     y2 = param1[1]
     z2 = param[2]
-    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2) + math.pow(z1-z2,2))
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2) + math.pow(z1 - z2, 2))
+
 
 # 找到密度最大的值
 def findMax(density_arr):
@@ -196,7 +210,7 @@ def findMax(density_arr):
     return density_arr[index1]
 
 
-def _get_best_class_by_tao_value(antid,sampleid):
+def _get_best_class_by_tao_value(antid, sampleid):
     max_value = np.max(tao_array[antid][sampleid])
 
     for i in range(0, CLASS_NUM):
@@ -214,7 +228,7 @@ def random_pick(some_list, probabilities):
     return item
 
 
-def _get_best_class_by_tao_probablity(ant,sampleid):
+def _get_best_class_by_tao_probablity(ant, sampleid):
     tarray = np.array(tao_array[ant][sampleid])
 
     parray = tarray / np.sum(tarray)
@@ -231,14 +245,14 @@ def global_optimize():
 
             if r[i][j] > change_q:
 
-                tmp_index = _get_best_class_by_tao_value(i,j)
+                tmp_index = _get_best_class_by_tao_value(i, j)
 
                 # 选择该样本中信息素最高的做为分类
                 ant_array[i][j] = tmp_index
 
             else:
                 # 计算概率值，根据概率的大小来确定一个选项
-                tmp_index = _get_best_class_by_tao_probablity(i,j)
+                tmp_index = _get_best_class_by_tao_probablity(i, j)
 
                 ant_array[i][j] = tmp_index
 
@@ -280,9 +294,9 @@ def _global_search():
                 if ant_array[i][k] != j:
                     continue
 
-                f_value_feature_0.append(sample[k][0])   # 簇1
-                f_value_feature_1.append(sample[k][1])   # 簇2
-                f_value_feature_2.append(sample[k][2])   # 簇3
+                f_value_feature_0.append(sample[k][0])  # 簇1
+                f_value_feature_1.append(sample[k][1])  # 簇2
+                f_value_feature_2.append(sample[k][2])  # 簇3
 
             if len(f_value_feature_0) > 0:
                 center_array_temp[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
@@ -303,11 +317,10 @@ def _global_search():
                 target_value += cal_dis(sample[j], center_array_temp[ant_id][0])
             if temp_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
-                target_value += cal_dis(sample[j],center_array_temp[ant_id][1])
+                target_value += cal_dis(sample[j], center_array_temp[ant_id][1])
             if temp_array[ant_id][j] == 2:
-                target_value += cal_dis(sample[j],center_array_temp[ant_id][2])
-        t_target.append([ant_id,target_value])
-
+                target_value += cal_dis(sample[j], center_array_temp[ant_id][2])
+        t_target.append([ant_id, target_value])
 
     # 根据目标函数值去做更新
     for target in t_target:
@@ -317,7 +330,7 @@ def _global_search():
             # 更新最优解
             ant_array[ant] = temp_array[ant]
             center_array[ant] = center_array_temp[ant]
-            ant_target[ant] = (ant,target)
+            ant_target[ant] = (ant, target)
 
 
 def _update_ant_target():
@@ -335,7 +348,7 @@ def _update_ant_target():
     # :[2,2]  7:[3,3]
     # 根号下（1-center0）的平方+
 
-        # 三个属性
+    # 三个属性
     for i in range(0, ANT_NUM):
         target_value = 0
         for j in range(0, SAMPLE_NUM):
@@ -350,7 +363,7 @@ def _update_ant_target():
             elif ant_array[i][j] == 2:
                 # 与分类3的聚类点计算距离
                 target_value += cal_dis(sample[j], center_array[i][2])
-        if(find_target(i) == 0 or target_value < find_target(i)):
+        if (find_target(i) == 0 or target_value < find_target(i)):
             ant_target[i] = (i, target_value)
 
     # for j in range(0, ANT_NUM):
@@ -381,6 +394,7 @@ def _update_ant_target():
     #         elif i == 2 and f_num_2 != 0:
     #             temp_center_array[i][2] = f_value_feature_2 / f_num_2
 
+
 def update_ant_center():
     # 中心矩阵：行为簇数，列为属性
     # 求的是属于每个簇的每个样本的各个属性的平均值
@@ -408,10 +422,9 @@ def update_ant_center():
     #         if len(f_value_feature_2) > 0:
     #             center_array[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
 
-
     center_array_temp = [[[0 for col in range(FEATURE_NUM)] for row in range(CLASS_NUM)] for ant in range(ANT_NUM)]
 
-    for i in range(0,ANT_NUM):
+    for i in range(0, ANT_NUM):
 
         for j in range(0, CLASS_NUM):
             f_value_feature_0 = []
@@ -421,9 +434,9 @@ def update_ant_center():
                 if ant_array[i][k] != j:
                     continue
 
-                f_value_feature_0.append(sample[k][0])   # 簇1
-                f_value_feature_1.append(sample[k][1])   # 簇2
-                f_value_feature_2.append(sample[k][2])   # 簇3
+                f_value_feature_0.append(sample[k][0])  # 簇1
+                f_value_feature_1.append(sample[k][1])  # 簇2
+                f_value_feature_2.append(sample[k][2])  # 簇3
 
             if len(f_value_feature_0) > 0:
                 center_array_temp[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
@@ -431,7 +444,6 @@ def update_ant_center():
                 center_array_temp[i][j][1] = sum(f_value_feature_1) / len(f_value_feature_1)
             if len(f_value_feature_2) > 0:
                 center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
-
 
     for ant_id in range(0, CLASS_NUM):
         target_value = 0
@@ -443,33 +455,32 @@ def update_ant_center():
                 target_value += cal_dis(sample[j], center_array_temp[ant_id][0])
             if ant_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
-                target_value += cal_dis(sample[j],center_array_temp[ant_id][1])
+                target_value += cal_dis(sample[j], center_array_temp[ant_id][1])
             if ant_array[ant_id][j] == 2:
-                target_value += cal_dis(sample[j],center_array_temp[ant_id][2])
+                target_value += cal_dis(sample[j], center_array_temp[ant_id][2])
 
         if target_value < find_target(ant_id):
             # 更新中心矩阵
             center_array[ant_id] = center_array_temp[ant_id]
 
 
-
-
-def _judge_sample(antid,sampleid):
+def _judge_sample(antid, sampleid):
     """
     计算与当前聚类点的举例，判断该sample应所属的归类
     """
     nearly = 0
     minDis = 100
     for i in range(CLASS_NUM):
-        dis1 = cal_dis(sample[sampleid],center_array[antid][nearly])
+        dis1 = cal_dis(sample[sampleid], center_array[antid][nearly])
         # f1 = math.pow((sample[sampleid][0] - center_array[antid][nearly][0]), 2)
         # f2 = math.pow((sample[sampleid][1] - center_array[antid][nearly][1]), 2)
         # dis1 = math.sqrt(f1 + f2)
 
-        if(dis1 < minDis):
+        if (dis1 < minDis):
             minDis = dis1
             nearly = i
     return nearly
+
 
 #  原局部搜索
 def _local_search():
@@ -493,7 +504,7 @@ def _local_search():
             # 对于该蚂蚁解集中的每一个样本
             if random.random() < change_jp:
                 # 将该样本调整到与当前某个聚类点最近的位置
-                t_ant_array[ant_id][j] = _judge_sample(i,j)
+                t_ant_array[ant_id][j] = _judge_sample(i, j)
 
         # 判断是否保留这个临时解
         for j in range(0, SAMPLE_NUM):
@@ -529,7 +540,7 @@ def change_local_search():
             # 对于该蚂蚁解集中的每一个样本
             if random.random() < change_jp:
                 # 将该样本调整到与当前某个聚类点最近的位置
-                t_ant_array[ant_id][j] = _judge_sample(i,j)
+                t_ant_array[ant_id][j] = _judge_sample(i, j)
 
         # 判断是否保留这个临时解
         for j in range(0, SAMPLE_NUM):
@@ -540,7 +551,7 @@ def change_local_search():
                 # f1 = math.pow((sample[j][0] - center_array[i][0][0]), 2)
                 # f2 = math.pow((sample[j][1] - center_array[i][0][1]), 2)
                 # target_value += math.sqrt(f1 + f2)
-                target_value += cal_dis(sample[j],center_array[i][0])
+                target_value += cal_dis(sample[j], center_array[i][0])
             elif t_ant_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
                 # f1 = math.pow((sample[j][0] - center_array[i][1][0]), 2)
@@ -558,13 +569,12 @@ def change_local_search():
             ant_array[ant_id] = t_ant_array[ant_id]
 
 
-
 # 原更新信息素表
 def _update_tau_array():
     """
     更新信息素表
     """
-    for n in range(0,ANT_NUM):
+    for n in range(0, ANT_NUM):
 
         for i in range(0, SAMPLE_NUM):
 
@@ -583,7 +593,7 @@ def _update_tau_array():
                         # f1 = math.pow((sample[i][0] - center_array[n][j][0]), 2)
                         # f2 = math.pow((sample[i][1] - center_array[n][j][1]), 2)
                         # J += math.sqrt(f1 + f2)
-                        J += cal_dis(sample[i],center_array[n][j])
+                        J += cal_dis(sample[i], center_array[n][j])
                 if J != 0:
                     tmp += Q / J
 
@@ -613,30 +623,30 @@ def change_update_tau_array():
                 # 处理信息素浓度增加
 
                 if ant_array[n][i] == j:
-                    tmp=tmp+1/find_target[n]
+                    tmp = tmp + 1 / find_target[n]
 
                 tao_array[n][i][j] = tmp
         # 根据信息素矩阵更新解字符串
         tmp = _get_best_class_by_tao_value(n, i)
         ant_array[n][i] = tmp
 
+
 def find_target(ant_id):
-    for i in range(0,ANT_NUM):
-        if(ant_id == ant_target[i][0]):
+    for i in range(0, ANT_NUM):
+        if (ant_id == ant_target[i][0]):
             return ant_target[i][1]
     return ant_target[ant_id][1]
+
+
 from sklearn.cluster import KMeans
 import original_test
 from sklearn.metrics import precision_score
-
-
-
 
 if __name__ == "__main__":
     change_init_test_data()
     eco_target = []
     for NOW_ITER in range(1, ITERATE_NUM):
-        ant_target.sort(key=lambda x:x[1])
+        ant_target.sort(key=lambda x: x[1])
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant_target()
@@ -651,7 +661,7 @@ if __name__ == "__main__":
 
         eco_target.append(ant_target[0][1])
     # 结果集
-    ant_target.sort(key=lambda x:x[1])
+    ant_target.sort(key=lambda x: x[1])
     res = numpy.array(ant_array[ant_target[0][0]])
     optimizeAntRes = precision_score(target_classify, res, average="micro")
     colors1 = '#C0504D'
@@ -665,11 +675,11 @@ if __name__ == "__main__":
     fig = plt.figure()
     ax = fig.add_subplot(121, projection='3d')
     ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],
-                sample[:, 2][target_classify == 0], marker='.')
+               sample[:, 2][target_classify == 0], marker='.')
     ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],
-                sample[:, 2][target_classify == 1], marker='x')
+               sample[:, 2][target_classify == 1], marker='x')
     ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],
-                sample[:, 2][target_classify == 2], marker='*')
+               sample[:, 2][target_classify == 2], marker='*')
     bx = fig.add_subplot(122, projection='3d')
     bx.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], sample[:, 2][res == 0], marker='.')
     bx.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], sample[:, 2][res == 1], marker='x')
@@ -683,18 +693,17 @@ if __name__ == "__main__":
     plt.figure(figsize=(10, 10), facecolor='w')
     plt.subplot(221)
     plt.title('origin classfication')
-    plt.scatter(sample[:, 0][target_classify==0], sample[:, 1][target_classify==0],marker='.',s=20)
-    plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],marker='x', s=20)
+    plt.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0], marker='.', s=20)
+    plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1], marker='x', s=20)
     plt.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2], marker='*', s=20)
     # plt.scatter(sample[:, 0][target_classify == 3], sample[:, 1][target_classify == 3], marker='+', s=20)
 
     plt.subplot(222)
     plt.title('perfect ant classfication')
-    plt.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0],marker='.', s=20)
+    plt.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], marker='.', s=20)
     plt.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], marker='x', s=20)
     plt.scatter(sample[:, 0][res == 2], sample[:, 1][res == 2], marker='*', s=20)
     # plt.scatter(sample[:, 0][pre == 3], sample[:, 1][pre == 3], marker='+', s=20)
-
 
     plt.plot(center_array[0][0][0], center_array[0][0][1], 'ro')
     plt.plot(center_array[0][1][0], center_array[0][1][1], 'bo')
@@ -702,8 +711,8 @@ if __name__ == "__main__":
     # plt.plot(center_array[3][0], center_array[3][1], 'go')
     # print(optimizeAntRes)
     print("优化后准确率：")
-    if(optimizeAntRes<0.5):
-        print(1-optimizeAntRes)
+    if (optimizeAntRes < 0.5):
+        print(1 - optimizeAntRes)
     else:
         print(optimizeAntRes)
 
@@ -731,7 +740,7 @@ if __name__ == "__main__":
     # print(unOptimizeAntRes)
     plt.show()
     plt.figure(figsize=(5, 5), facecolor='w')
-    plt.plot(range(ITERATE_NUM-1), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    plt.plot(range(ITERATE_NUM - 1), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
     plt.title("iter and target")
 
     plt.show()
