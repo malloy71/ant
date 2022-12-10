@@ -12,7 +12,7 @@ from sklearn.decomposition import PCA
 import pandas as pd
 
 SAMPLE_NUM = 150  # 样本数量
-FEATURE_NUM = 2  # 每个样本的特征数量
+FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
 ANT_NUM = 20  # 蚂蚁数量
 ITERATE_NUM = 50  # 迭代次数
@@ -28,7 +28,7 @@ X = data.drop(['target', 'label'], axis=1)
 y = data.loc[:, 'label']
 # 预处理，将数据规范化
 X_norm = StandardScaler().fit_transform(X)
-pca = PCA(n_components=2)
+pca = PCA(n_components=3)
 X_pca = pca.fit_transform(X_norm)
 
 # iris = ds.load_iris()
