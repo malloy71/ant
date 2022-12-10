@@ -23,22 +23,26 @@ NOW_ITER = 1  # 当前迭代轮次
 #sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=40)
 class Ant:
     # def __init__(self, SAMPLE_NUM, FEATURE_NUM,CLASS_NUM,ANT_NUM,ITERATE_NUM,sample,target_classify):
-    def __init__(self, SAMPLE_NUM, sample, target_classify):
-        self.SAMPLE_NUM = SAMPLE_NUM
+    def __init__(self, sample_num, data, res):
+        global SAMPLE_NUM
+        SAMPLE_NUM = sample_num
         # self.FEATURE_NUM = FEATURE_NUM
         # self.CLASS_NUM = CLASS_NUM
         # self.ANT_NUM = ANT_NUM
         # self.ITERATE_NUM = ITERATE_NUM
         # self.FEATURE_NUM = FEATURE_NUM
-        self.sample = sample
-        self.target_classify = target_classify
+        global sample
+        sample = data
+        global target_classify
+        target_classify = res
+        global ant_array
+        ant_array = [[0 for col in range(SAMPLE_NUM)] for row in range(20)]
 
     def run(self):
         change_init_test_data()
         eco_target = []
         for NOW_ITER in range(1, ITERATE_NUM):
             ant_target.sort(key=lambda x: x[1])
-            print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
             _update_ant_target()
             _global_search()
@@ -51,62 +55,7 @@ class Ant:
         # 结果集
         ant_target.sort(key=lambda x: x[1])
         res = numpy.array(ant_array[ant_target[0][0]])
-        optimizeAntRes = precision_score(target_classify, res, average="micro")
-        colors1 = '#C0504D'
-        colors2 = '#00EEEE'
-        colors3 = '#FF6600'
-
-        area1 = np.pi * 2 ** 2  # 半径为2的圆的面积
-        area2 = np.pi * 3 ** 2
-        area3 = np.pi * 4 ** 2
-
-        fig = plt.figure()
-        ax = fig.add_subplot(121, projection='3d')
-        ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],
-                   sample[:, 2][target_classify == 0], marker='.')
-        ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],
-                   sample[:, 2][target_classify == 1], marker='x')
-        ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],
-                   sample[:, 2][target_classify == 2], marker='*')
-        bx = fig.add_subplot(122, projection='3d')
-        bx.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], sample[:, 2][res == 0], marker='.')
-        bx.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], sample[:, 2][res == 1], marker='x')
-        bx.scatter(sample[:, 0][res == 2], sample[:, 1][res == 2], sample[:, 2][res == 2], marker='*')
-
-        bx.plot(center_array[0][0][0], center_array[0][0][1], center_array[0][0][2], 'ro')
-        bx.plot(center_array[0][1][0], center_array[0][1][1], center_array[0][1][2], 'bo')
-        bx.plot(center_array[0][2][0], center_array[0][2][1], center_array[0][2][2], 'yo')
-        plt.show()
-
-        plt.figure(figsize=(10, 10), facecolor='w')
-        plt.subplot(221)
-        plt.title('origin classfication')
-        plt.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0], marker='.', s=20)
-        plt.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1], marker='x', s=20)
-        plt.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2], marker='*', s=20)
-
-        plt.subplot(222)
-        plt.title('perfect ant classfication')
-        plt.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], marker='.', s=20)
-        plt.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], marker='x', s=20)
-        plt.scatter(sample[:, 0][res == 2], sample[:, 1][res == 2], marker='*', s=20)
-
-        plt.plot(center_array[0][0][0], center_array[0][0][1], 'ro')
-        plt.plot(center_array[0][1][0], center_array[0][1][1], 'bo')
-        plt.plot(center_array[0][2][0], center_array[0][2][1], 'yo')
-
-        print("优化后准确率：")
-        if (optimizeAntRes < 0.5):
-            print(1 - optimizeAntRes)
-        else:
-            print(optimizeAntRes)
-
-        plt.show()
-        plt.figure(figsize=(5, 5), facecolor='w')
-        plt.plot(range(ITERATE_NUM - 1), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
-        plt.title("iter and target")
-
-        plt.show()
+        return res
 
 data = pd.read_csv('iris_data.csv')
 X = data.drop(['target', 'label'], axis=1)
