@@ -33,7 +33,7 @@ class Ant:
         self.sample = sample
         self.target_classify = target_classify
 
-    def run():
+    def run(self):
         change_init_test_data()
         eco_target = []
         for NOW_ITER in range(1, ITERATE_NUM):
