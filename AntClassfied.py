@@ -201,7 +201,7 @@ def change_init_test_data():
     根据初始聚类中心，建立信息素矩阵
     """
     r = getR()
-    # r = 2
+    # r = 1.1
     print("r=", r)
 
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
