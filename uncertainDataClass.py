@@ -46,21 +46,21 @@ if __name__ == '__main__':
     model = KNN.fit(a_sample,a_res)
     k_res = model.predict(k_sample)
     # >0.8 的样本交给ant训练，将ant训练的样本和结果，交给knn训练，再由knn预测<0.8的样本，合并所有样本和结果
-    all_sample = a_sample + k_sample
-    all_target = a_res.tolist() + k_res.tolist()
+    all_sample = np.vstack((np.array(a_sample), np.array(k_sample)))
+    all_target = np.hstack((a_res, np.array(k_res)))
 
-    # plt.figure(figsize=(10, 10), facecolor='w')
-    # plt.subplot(221)
-    # plt.title('origin classfication')
-    # plt.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], marker='.', s=20)
-    # plt.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], marker='x', s=20)
-    # plt.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], marker='*', s=20)
-    #
-    # plt.subplot(222)
-    # plt.title('uncertain classfication')
-    # plt.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], marker='.', s=20)
-    # plt.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], marker='x', s=20)
-    # plt.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], marker='*', s=20)
+    plt.figure(figsize=(10, 10), facecolor='w')
+    plt.subplot(221)
+    plt.title('origin classfication')
+    plt.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], marker='.', s=20)
+    plt.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], marker='x', s=20)
+    plt.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], marker='*', s=20)
+
+    plt.subplot(222)
+    plt.title('uncertain classfication')
+    plt.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], marker='.', s=20)
+    plt.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], marker='x', s=20)
+    plt.scatter(all_sample[:, 0][all_target == 2], all_sample[:, 1][all_target == 2], marker='*', s=20)
 
     optimizeAntRes = precision_score(target_classify, all_target, average="micro")
 
@@ -70,5 +70,5 @@ if __name__ == '__main__':
     else:
         print(optimizeAntRes)
 
-    # plt.show()
+    plt.show()
 
