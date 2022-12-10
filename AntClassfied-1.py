@@ -22,7 +22,7 @@ NOW_ITER = 1  # 当前迭代轮次
 """
 #sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=40)
 
-
+# 初始化
 data = pd.read_csv('iris_data.csv')
 X = data.drop(['target', 'label'], axis=1)
 y = data.loc[:, 'label']
@@ -37,6 +37,7 @@ X_pca = pca.fit_transform(X_norm)
 
 sample = X_pca
 target_classify = data.loc[:, 'label']
+
 """
 信息素矩阵
 """
@@ -110,11 +111,11 @@ def getR():
     yR = (sample[max_y][1] - sample[min_y][1]) / CLASS_NUM
     return max(xR, yR)
 
-
 def change_init_test_data():
     """
     根据初始聚类中心，建立信息素矩阵
     """
+    print(sample)
     r = getR()
     # r = 2
     print("r=", r)
@@ -173,7 +174,7 @@ def pick_center_by_density(antid, r):
             if (count == 0):
                 center_array[antid][count][0] = sample[pick][0]
                 center_array[antid][count][1] = sample[pick][1]
-                center_array[antid][count][2] = sample[pick][2]
+                # center_array[antid][count][2] = sample[pick][2]
                 pick_arr.append(pick)
                 count += 1
             elif count > 0 and count < CLASS_NUM:
@@ -185,7 +186,7 @@ def pick_center_by_density(antid, r):
                 if (flag == 0):
                     center_array[antid][count][0] = sample[pick][0]
                     center_array[antid][count][1] = sample[pick][1]
-                    center_array[antid][count][2] = sample[pick][2]
+                    # center_array[antid][count][2] = sample[pick][2]
                     pick_arr.append(pick)
                     count += 1
 
@@ -193,11 +194,12 @@ def pick_center_by_density(antid, r):
 def cal_dis(param, param1):
     x1 = param[0]
     y1 = param[1]
-    z1 = param[2]
+    # z1 = param[2]
     x2 = param1[0]
     y2 = param1[1]
-    z2 = param[2]
-    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2) + math.pow(z1 - z2, 2))
+    # z2 = param[2]
+    # return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2) + math.pow(z1 - z2, 2))
+    return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2))
 
 
 # 找到密度最大的值
@@ -296,14 +298,14 @@ def _global_search():
 
                 f_value_feature_0.append(sample[k][0])  # 簇1
                 f_value_feature_1.append(sample[k][1])  # 簇2
-                f_value_feature_2.append(sample[k][2])  # 簇3
+                # f_value_feature_2.append(sample[k][2])  # 簇3
 
             if len(f_value_feature_0) > 0:
                 center_array_temp[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
             if len(f_value_feature_1) > 0:
                 center_array_temp[i][j][1] = sum(f_value_feature_1) / len(f_value_feature_1)
-            if len(f_value_feature_2) > 0:
-                center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
+            # if len(f_value_feature_2) > 0:
+            #     center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
 
     t_target = []
     for ant_id in taboo:
@@ -318,8 +320,8 @@ def _global_search():
             if temp_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
                 target_value += cal_dis(sample[j], center_array_temp[ant_id][1])
-            if temp_array[ant_id][j] == 2:
-                target_value += cal_dis(sample[j], center_array_temp[ant_id][2])
+            # if temp_array[ant_id][j] == 2:
+            #     target_value += cal_dis(sample[j], center_array_temp[ant_id][2])
         t_target.append([ant_id, target_value])
 
     # 根据目标函数值去做更新
@@ -436,14 +438,14 @@ def update_ant_center():
 
                 f_value_feature_0.append(sample[k][0])  # 簇1
                 f_value_feature_1.append(sample[k][1])  # 簇2
-                f_value_feature_2.append(sample[k][2])  # 簇3
+                # f_value_feature_2.append(sample[k][2])  # 簇3
 
             if len(f_value_feature_0) > 0:
                 center_array_temp[i][j][0] = sum(f_value_feature_0) / len(f_value_feature_0)
             if len(f_value_feature_1) > 0:
                 center_array_temp[i][j][1] = sum(f_value_feature_1) / len(f_value_feature_1)
-            if len(f_value_feature_2) > 0:
-                center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
+            # if len(f_value_feature_2) > 0:
+            #     center_array_temp[i][j][2] = sum(f_value_feature_2) / len(f_value_feature_2)
 
     for ant_id in range(0, CLASS_NUM):
         target_value = 0
@@ -456,8 +458,8 @@ def update_ant_center():
             if ant_array[ant_id][j] == 1:
                 # 与分类1的聚类点计算距离
                 target_value += cal_dis(sample[j], center_array_temp[ant_id][1])
-            if ant_array[ant_id][j] == 2:
-                target_value += cal_dis(sample[j], center_array_temp[ant_id][2])
+            # if ant_array[ant_id][j] == 2:
+            #     target_value += cal_dis(sample[j], center_array_temp[ant_id][2])
 
         if target_value < find_target(ant_id):
             # 更新中心矩阵
@@ -672,23 +674,23 @@ if __name__ == "__main__":
     area2 = np.pi * 3 ** 2
     area3 = np.pi * 4 ** 2
 
-    fig = plt.figure()
-    ax = fig.add_subplot(121, projection='3d')
-    ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],
-               sample[:, 2][target_classify == 0], marker='.')
-    ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],
-               sample[:, 2][target_classify == 1], marker='x')
-    ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],
-               sample[:, 2][target_classify == 2], marker='*')
-    bx = fig.add_subplot(122, projection='3d')
-    bx.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], sample[:, 2][res == 0], marker='.')
-    bx.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], sample[:, 2][res == 1], marker='x')
-    bx.scatter(sample[:, 0][res == 2], sample[:, 1][res == 2], sample[:, 2][res == 2], marker='*')
-
-    bx.plot(center_array[0][0][0], center_array[0][0][1], center_array[0][0][2], 'ro')
-    bx.plot(center_array[0][1][0], center_array[0][1][1], center_array[0][1][2], 'bo')
-    bx.plot(center_array[0][2][0], center_array[0][2][1], center_array[0][2][2], 'yo')
-    plt.show()
+    # fig = plt.figure()
+    # ax = fig.add_subplot(121, projection='3d')
+    # ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],
+    #            sample[:, 2][target_classify == 0], marker='.')
+    # ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],
+    #            sample[:, 2][target_classify == 1], marker='x')
+    # ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],
+    #            sample[:, 2][target_classify == 2], marker='*')
+    # bx = fig.add_subplot(122, projection='3d')
+    # bx.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], sample[:, 2][res == 0], marker='.')
+    # bx.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], sample[:, 2][res == 1], marker='x')
+    # bx.scatter(sample[:, 0][res == 2], sample[:, 1][res == 2], sample[:, 2][res == 2], marker='*')
+    #
+    # bx.plot(center_array[0][0][0], center_array[0][0][1], center_array[0][0][2], 'ro')
+    # bx.plot(center_array[0][1][0], center_array[0][1][1], center_array[0][1][2], 'bo')
+    # bx.plot(center_array[0][2][0], center_array[0][2][1], center_array[0][2][2], 'yo')
+    # plt.show()
 
     plt.figure(figsize=(10, 10), facecolor='w')
     plt.subplot(221)
