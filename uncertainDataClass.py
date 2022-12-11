@@ -13,8 +13,19 @@ from sklearn.decomposition import PCA
 import pandas as pd
 from AntClassfied import Ant
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn import datasets
 
-if __name__ == '__main__':
+def load_wine():
+    wine_data = datasets.load_wine()
+    data = wine_data.data
+    target_classify = wine_data.target
+    # 预处理，将数据规范化
+    X_norm = StandardScaler().fit_transform(data)
+    pca = PCA(n_components=3)
+    data = pca.fit_transform(X_norm)
+    return data, target_classify
+
+def load_iris():
     data = pd.read_csv('iris_data.csv')
     X = data.drop(['target', 'label'], axis=1)
     y = data.loc[:, 'label']
@@ -22,21 +33,20 @@ if __name__ == '__main__':
     X_norm = StandardScaler().fit_transform(X)
     pca = PCA(n_components=3)
     X_pca = pca.fit_transform(X_norm)
-    prob = np.array([[0] for _ in range(150)])
     sample = X_pca
     target_classify = data.loc[:, 'label']
+    return sample,target_classify
+def run(data,target_classify):
     a_sample = []
     a_target = []
     k_sample = []
     k_target = []
-    for i in range(150):
+    for i in range(len(data)):
         if random.random() < 0.8:
-            k_sample.append(sample[i])
+            k_sample.append(data[i])
             k_target.append(target_classify[i])
-            prob[i][0] = 1
         else:
-            prob[i][0] = 0
-            a_sample.append(sample[i])
+            a_sample.append(data[i])
             a_target.append(target_classify[i])
 
     a_res = Ant(len(a_sample),a_sample,a_target).run()
@@ -49,9 +59,9 @@ if __name__ == '__main__':
 
     fig = plt.figure()
     ax = fig.add_subplot(121, projection='3d')
-    ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],sample[:, 2][target_classify == 0], marker='.')
-    ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],sample[:, 2][target_classify == 1], marker='x')
-    ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],sample[:, 2][target_classify == 2], marker='*')
+    ax.scatter(data[:, 0][target_classify == 0], data[:, 1][target_classify == 0],data[:, 2][target_classify == 0], marker='.')
+    ax.scatter(data[:, 0][target_classify == 1], data[:, 1][target_classify == 1],data[:, 2][target_classify == 1], marker='x')
+    ax.scatter(data[:, 0][target_classify == 2], data[:, 1][target_classify == 2],data[:, 2][target_classify == 2], marker='*')
     bx = fig.add_subplot(122, projection='3d')
     bx.scatter(all_sample[:, 0][all_target == 0], all_sample[:, 1][all_target == 0], all_sample[:, 2][all_target == 0], marker='.')
     bx.scatter(all_sample[:, 0][all_target == 1], all_sample[:, 1][all_target == 1], all_sample[:, 2][all_target == 1], marker='x')
@@ -67,3 +77,8 @@ if __name__ == '__main__':
 
     plt.show()
 
+if __name__ == '__main__':
+    data,target = load_iris()
+    run(data, target)
+    data, target = load_wine()
+    run(data,target)
