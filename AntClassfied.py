@@ -652,14 +652,16 @@ def change_update_tau_array():
                 tmp = tao_array[n][i][j]  # 当前的信息素
                 rou = (ITERATE_NUM - NOW_ITER) / ITERATE_NUM  # 此轮挥发系数
                 if rou > 0.02:
-                    tmp = rou * tmp  # 处理信息素挥发
+                    tmp = (1 - rou) * tmp  # 处理信息素挥发
                 else:
-                    tmp = 0.02 * tmp
-
+                    tmp = (1-0.02) * tmp
+                J = 0
                 # 处理信息素浓度增加
-
-                if ant_array[n][i] == j:
-                    tmp = tmp + 1 / find_target[n]
+                for k in range(0,ANT_NUM):
+                    if ant_array[k][i] == j:
+                        J = find_target[k]
+                if J !=0:
+                    tmp+=1/J
 
                 tao_array[n][i][j] = tmp
         # 根据信息素矩阵更新解字符串
@@ -691,8 +693,8 @@ if __name__ == "__main__":
         change_local_search()
 
         update_ant_center()
-        # change_update_tau_array()
-        _update_tau_array()
+        change_update_tau_array()
+        # _update_tau_array()
 
         eco_target.append(ant_target[0][1])
     # 结果集
