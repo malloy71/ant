@@ -30,7 +30,7 @@ if __name__ == '__main__':
     k_sample = []
     k_target = []
     for i in range(150):
-        if random.random() < 0.8:
+        if random.random() < 0.6:
             k_sample.append(sample[i])
             k_target.append(target_classify[i])
             prob[i][0] = 1
@@ -59,11 +59,11 @@ if __name__ == '__main__':
 
     optimizeAntRes = precision_score(a_target+k_target, all_target, average="micro")
 
+    #
     print("优化后准确率：")
-    if (optimizeAntRes < 0.5):
-        print(1 - optimizeAntRes)
-    else:
-        print(optimizeAntRes)
-
+    # if (optimizeAntRes < 0.5):
+    #     print(1 - optimizeAntRes)
+    # else:
+    print(optimizeAntRes)
     plt.show()
 

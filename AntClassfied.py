@@ -10,7 +10,8 @@ import sklearn.datasets as ds
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import pandas as pd
-
+from sklearn.metrics import silhouette_score
+from sklearn.metrics import accuracy_score
 SAMPLE_NUM = 150  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
@@ -20,7 +21,7 @@ NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-#sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=40)
+# sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
 class Ant:
     # def __init__(self, SAMPLE_NUM, FEATURE_NUM,CLASS_NUM,ANT_NUM,ITERATE_NUM,sample,target_classify):
     def __init__(self, sample_num, data, res):
@@ -56,6 +57,7 @@ class Ant:
         ant_target.sort(key=lambda x: x[1])
         res = numpy.array(ant_array[ant_target[0][0]])
         return res
+
 
 data = pd.read_csv('iris_data.csv')
 X = data.drop(['target', 'label'], axis=1)
@@ -696,7 +698,8 @@ if __name__ == "__main__":
     # 结果集
     ant_target.sort(key=lambda x: x[1])
     res = numpy.array(ant_array[ant_target[0][0]])
-    optimizeAntRes = precision_score(target_classify, res, average="micro")
+    # optimizeAntRes = precision_score(target_classify, res, average="micro")
+    optimizeAntRes=accuracy_score(target_classify,res)
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -704,20 +707,35 @@ if __name__ == "__main__":
     area1 = np.pi * 2 ** 2  # 半径为2的圆的面积
     area2 = np.pi * 3 ** 2
     area3 = np.pi * 4 ** 2
+    # 因为是无监督学习，在聚类后是随机分配类别的，与初始数据的类别不匹配，需要进行矫正
+    y_corrected = []
+    for i in res:
+        if i == 0:
+            y_corrected.append(2)
+        elif i == 1:
+            y_corrected.append(0)
+        else:
+            y_corrected.append(1)
+    # print(pd.value_counts(y_corrected), pd.value_counts(y))
+    # print(accuracy_score(y, y_corrected))
+    # 需要对y_corrected进行格式转换，转换为数组
+    y_corrected = np.array(y_corrected)
+    # print(type(y_corrected))
 
     fig = plt.figure()
     ax = fig.add_subplot(121, projection='3d')
-    ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],
+    label0=ax.scatter(sample[:, 0][target_classify == 0], sample[:, 1][target_classify == 0],
                sample[:, 2][target_classify == 0], marker='.')
-    ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],
+    label1=ax.scatter(sample[:, 0][target_classify == 1], sample[:, 1][target_classify == 1],
                sample[:, 2][target_classify == 1], marker='x')
-    ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],
+    label2=ax.scatter(sample[:, 0][target_classify == 2], sample[:, 1][target_classify == 2],
                sample[:, 2][target_classify == 2], marker='*')
+    plt.legend((label0, label1, label2), ('label0', 'label1', 'label2'))
     bx = fig.add_subplot(122, projection='3d')
-    bx.scatter(sample[:, 0][res == 0], sample[:, 1][res == 0], sample[:, 2][res == 0], marker='.')
-    bx.scatter(sample[:, 0][res == 1], sample[:, 1][res == 1], sample[:, 2][res == 1], marker='x')
-    bx.scatter(sample[:, 0][res == 2], sample[:, 1][res == 2], sample[:, 2][res == 2], marker='*')
-
+    label0=bx.scatter(sample[:, 0][y_corrected == 0], sample[:, 1][y_corrected == 0], sample[:, 2][y_corrected == 0], marker='.')
+    label1=bx.scatter(sample[:, 0][y_corrected == 1], sample[:, 1][y_corrected == 1], sample[:, 2][y_corrected == 1], marker='x')
+    label2=bx.scatter(sample[:, 0][y_corrected == 2], sample[:, 1][y_corrected == 2], sample[:, 2][y_corrected == 2], marker='*')
+    plt.legend((label0, label1, label2), ('label0', 'label1', 'label2'))
     bx.plot(center_array[0][0][0], center_array[0][0][1], center_array[0][0][2], 'ro')
     bx.plot(center_array[0][1][0], center_array[0][1][1], center_array[0][1][2], 'bo')
     bx.plot(center_array[0][2][0], center_array[0][2][1], center_array[0][2][2], 'yo')
@@ -749,6 +767,8 @@ if __name__ == "__main__":
     else:
         print(optimizeAntRes)
 
+    sc=silhouette_score(sample,target_classify)
+    print(sc)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
     # # kmeans
