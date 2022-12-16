@@ -21,7 +21,7 @@ NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-# sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
 class Ant:
     # def __init__(self, SAMPLE_NUM, FEATURE_NUM,CLASS_NUM,ANT_NUM,ITERATE_NUM,sample,target_classify):
     def __init__(self, sample_num, data, res):
@@ -71,8 +71,8 @@ X_pca = pca.fit_transform(X_norm)
 # sample = iris.data
 # target_classify = iris.target
 
-sample = X_pca
-target_classify = data.loc[:, 'label']
+# sample = X_pca
+# target_classify = data.loc[:, 'label']
 """
 信息素矩阵
 """
@@ -624,11 +624,7 @@ def _update_tau_array():
 
                 # 处理信息素浓度增加
                 for k in range(0, ANT_NUM):
-
                     if ant_array[k][i] == j:
-                        # f1 = math.pow((sample[i][0] - center_array[n][j][0]), 2)
-                        # f2 = math.pow((sample[i][1] - center_array[n][j][1]), 2)
-                        # J += math.sqrt(f1 + f2)
                         J += cal_dis(sample[i], center_array[n][j])
                 if J != 0:
                     tmp += Q / J
@@ -651,22 +647,22 @@ def change_update_tau_array():
             for j in range(0, CLASS_NUM):
                 tmp = tao_array[n][i][j]  # 当前的信息素
                 rou = (ITERATE_NUM - NOW_ITER) / ITERATE_NUM  # 此轮挥发系数
-                if rou > 0.02:
+                if rou > 0.1:
                     tmp = (1 - rou) * tmp  # 处理信息素挥发
                 else:
-                    tmp = (1-0.02) * tmp
+                    tmp = (1-0.1) * tmp
                 J = 0
                 # 处理信息素浓度增加
                 for k in range(0,ANT_NUM):
                     if ant_array[k][i] == j:
-                        J = find_target[k]
+                        J += cal_dis(sample[i], center_array[n][j])
                 if J !=0:
-                    tmp+=1/J
+                    tmp+=Q/J
 
                 tao_array[n][i][j] = tmp
-        # 根据信息素矩阵更新解字符串
-        tmp = _get_best_class_by_tao_value(n, i)
-        ant_array[n][i] = tmp
+            # 根据信息素矩阵更新解字符串
+            tmp = _get_best_class_by_tao_value(n, i)
+            ant_array[n][i] = tmp
 
 
 def find_target(ant_id):
@@ -700,8 +696,8 @@ if __name__ == "__main__":
     # 结果集
     ant_target.sort(key=lambda x: x[1])
     res = numpy.array(ant_array[ant_target[0][0]])
-    # optimizeAntRes = precision_score(target_classify, res, average="micro")
-    optimizeAntRes=accuracy_score(target_classify,res)
+    optimizeAntRes = precision_score(target_classify, res, average="micro")
+    # optimizeAntRes=accuracy_score(target_classify,res)
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -709,6 +705,7 @@ if __name__ == "__main__":
     area1 = np.pi * 2 ** 2  # 半径为2的圆的面积
     area2 = np.pi * 3 ** 2
     area3 = np.pi * 4 ** 2
+
     # 因为是无监督学习，在聚类后是随机分配类别的，与初始数据的类别不匹配，需要进行矫正
     y_corrected = []
     for i in res:

@@ -30,7 +30,7 @@ if __name__ == '__main__':
     k_sample = []
     k_target = []
     for i in range(150):
-        if random.random() < 0.6:
+        if random.random() < 0.2:
             k_sample.append(sample[i])
             k_target.append(target_classify[i])
             prob[i][0] = 1
