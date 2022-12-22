@@ -11,8 +11,9 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import pandas as pd
 from sklearn.metrics import silhouette_score
+from sklearn.metrics import normalized_mutual_info_score
 from sklearn.metrics import f1_score
-SAMPLE_NUM = 150  # 样本数量
+SAMPLE_NUM = 300  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
 ANT_NUM = 20  # 蚂蚁数量
@@ -21,7 +22,7 @@ NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=48)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=41)
 class Ant:
     # def __init__(self, SAMPLE_NUM, FEATURE_NUM,CLASS_NUM,ANT_NUM,ITERATE_NUM,sample,target_classify):
     def __init__(self, sample_num, data, res):
@@ -115,7 +116,7 @@ def _init_test_data():
     """
     将前两个样本作为聚类中心点的初始值
     """
-    # original_init_center()
+    original_init_center()
     # pick_center_by_density(r)
 
 
@@ -684,10 +685,10 @@ if __name__ == "__main__":
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant_target()
-        # global_optimize()
-        _global_search()
-        # _local_search()
-        change_local_search()
+        global_optimize()
+        # _global_search()
+        _local_search()
+        # change_local_search()
 
         update_ant_center()
         change_update_tau_array()
@@ -766,8 +767,9 @@ if __name__ == "__main__":
         print(1 - optimizeAntRes)
     else:
         print(optimizeAntRes)
-
+    nmi=normalized_mutual_info_score(target_classify,res)
     sc=silhouette_score(sample,res)
+    print(nmi)
     print(sc)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
@@ -793,7 +795,9 @@ if __name__ == "__main__":
     # print(unOptimizeAntRes)
     plt.show()
     plt.figure(figsize=(5, 5), facecolor='w')
-    plt.plot(range(ITERATE_NUM - 1), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    plt.plot(range(ITERATE_NUM - 1), eco_target, linewidth=1, color="orange", label="Mean value")
+    print(eco_target)
+
     plt.title("iter and target")
 
     plt.show()
