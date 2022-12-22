@@ -11,7 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 import pandas as pd
 from sklearn.metrics import silhouette_score
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import f1_score
 SAMPLE_NUM = 150  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
@@ -21,7 +21,7 @@ NOW_ITER = 1  # 当前迭代轮次
 """
 初始化测试样本，sample为样本，target_classify为目标分类结果用于对比算法效果  50
 """
-sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=30)
+sample, target_classify = ds.make_blobs(SAMPLE_NUM, n_features=FEATURE_NUM, centers=CLASS_NUM, random_state=48)
 class Ant:
     # def __init__(self, SAMPLE_NUM, FEATURE_NUM,CLASS_NUM,ANT_NUM,ITERATE_NUM,sample,target_classify):
     def __init__(self, sample_num, data, res):
@@ -168,7 +168,7 @@ def change_init_test_data():
             tmp = _get_best_class_by_tao_value(s, i)
             ant_array[s][i] = tmp
 
-    _init_test_data()
+    # _init_test_data()
 
 
 # 改动点1：根据密度选取中心点
@@ -676,7 +676,8 @@ def find_target(ant_id):
 from sklearn.metrics import precision_score
 
 if __name__ == "__main__":
-    change_init_test_data()
+    # change_init_test_data()
+    _init_test_data()
     eco_target = []
     for NOW_ITER in range(1, ITERATE_NUM):
         ant_target.sort(key=lambda x: x[1])
@@ -766,7 +767,7 @@ if __name__ == "__main__":
     else:
         print(optimizeAntRes)
 
-    sc=silhouette_score(sample,target_classify)
+    sc=silhouette_score(sample,res)
     print(sc)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
