@@ -9,11 +9,11 @@ import numpy
 import numpy as np
 import sklearn.datasets as ds
 from sklearn import metrics
-SAMPLE_NUM = 500  # 样本数量
-FEATURE_NUM = 5  # 每个样本的特征数量
+SAMPLE_NUM = 300  # 样本数量
+FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
-ANT_NUM = 200  # 蚂蚁数量
-ITERATE_NUM = 30  # 迭代次数
+ANT_NUM = 10  # 蚂蚁数量
+ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 
 start=time.perf_counter()
@@ -51,7 +51,7 @@ change_rho = 0.02  # 挥发参数
 Q = 0.1  # 信息素浓度参数
 
 
-def _init_test_data(r):
+def _init_test_data():
     """
     初始化蚁群解集，随机确认每只蚂蚁下每个样本的分类为1或者0
     """
@@ -64,8 +64,8 @@ def _init_test_data(r):
     """
     将前两个样本作为聚类中心点的初始值
     """
-    # original_init_center()
-    pick_center_by_density(r)
+    original_init_center()
+    # pick_center_by_density(r)
 
 
 # 随机选取两个中心点
@@ -82,7 +82,7 @@ def change_init_test_data():
     根据初始聚类中心，建立信息素矩阵
     """
 
-    r = 1.23
+    r = 1.3
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -472,7 +472,7 @@ def change_update_tau_array():
 from sklearn.cluster import KMeans
 import original_test
 from sklearn.metrics import precision_score
-
+from sklearn.metrics import normalized_mutual_info_score
 
 def run_batch(r):
     _init_test_data(r)
@@ -496,22 +496,9 @@ def run_batch(r):
 
 if __name__ == "__main__":
 
-    # r = 1.5
-    # while (r<5):
-    #     run_batch(r)
-    #     r += 0.1
-
-    # i=0
-    # while(i<10):
-    #     print("=======batch:"+str(i))
-    #     run_batch(1.6)
-    #     run_batch(2.5)
-    #     run_batch(3.1)
-    #     run_batch(2.9)
-    #     i+=1
 
     r = 2.5
-    # _init_test_data(r)
+    # _init_test_data()
     change_init_test_data()
     eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
@@ -527,13 +514,13 @@ if __name__ == "__main__":
         eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
     pre = numpy.array(ant_array[ant_target[0][0]])
-    optimizeAntRes = precision_score(target_classify, pre)
-    sc = str(metrics.silhouette_score(sample , pre))
-    ch = str(metrics.calinski_harabasz_score(sample,pre))
-
-    f1=metrics.f1_score(target_classify,pre)
-
-    db=str(metrics.davies_bouldin_score(sample,pre))
+    # optimizeAntRes = precision_score(target_classify, pre)
+    # sc = str(metrics.silhouette_score(sample , pre))
+    # ch = str(metrics.calinski_harabasz_score(sample,pre))
+    #
+    # f1=metrics.f1_score(target_classify,pre)
+    #
+    # db=str(metrics.davies_bouldin_score(sample,pre))
     colors1 = '#C0504D'
     colors2 = '#00EEEE'
     colors3 = '#FF6600'
@@ -556,43 +543,24 @@ if __name__ == "__main__":
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
     print("优化后准确率：")
-    if(optimizeAntRes<0.5):
-        print(1-optimizeAntRes)
-    else:
-        print(optimizeAntRes)
-    print('sc=' + sc)
-
-    print('f1为')
-    if(f1<0.5):
-        print(1-f1)
-    else:
-        print(f1)
-    print('ch='+ch)
-    print('db='+db)
+    # if(optimizeAntRes<0.5):
+    #     print(1-optimizeAntRes)
+    # else:
+    #     print(optimizeAntRes)
+    # print('sc=' + sc)
+    #
+    # print('f1为')
+    # if(f1<0.5):
+    #     print(1-f1)
+    # else:
+    #     print(f1)
+    # print('ch='+ch)
+    # print('db='+db)
+    # nmi=normalized_mutual_info_score(target_classify,pre)
+    # print(nmi)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
-    # # kmeans
-    # model = KMeans(n_clusters=2)
-    # model.fit(tmp_case)
-    # km_res = model.predict(sample)
-    # plt.subplot(223)
-    # plt.title('KMeans classfication')
-    # plt.scatter(sample[:, 0], sample[:, 1], c=km_res, s=30, edgecolors='none')
-    #
-    # # 未优化的蚁群算法
-    # original_res = original_test.run(sample, target_classify)
-    # plt.subplot(224)
-    # plt.title('low ant classfication')
-    # plt.scatter(sample[:, 0], sample[:, 1], c=original_res, s=20, edgecolors='none')
-    #
-    # optimizeAntRes = precision_score(target_classify, pre)
-    # unOptimizeAntRes = precision_score(target_classify, original_res)
-    # print("优化后准确率：")
-    # print(optimizeAntRes)
-    # print("不优化准确率：")
-    # print(unOptimizeAntRes)
-    #plt.savefig("./resimg/" + str(time.time()) +".png")
-
+    print(eco_target)
     plt.show()
     plt.figure(figsize=(5, 5), facecolor='w')
     plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
