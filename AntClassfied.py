@@ -13,10 +13,10 @@ import pandas as pd
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import normalized_mutual_info_score
 from sklearn.metrics import f1_score
-SAMPLE_NUM = 500  # 样本数量
-FEATURE_NUM = 3  # 每个样本的特征数量
+SAMPLE_NUM = 300  # 样本数量
+FEATURE_NUM = 10  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
-ANT_NUM = 20  # 蚂蚁数量
+ANT_NUM = 10  # 蚂蚁数量
 ITERATE_NUM = 50  # 迭代次数
 NOW_ITER = 1  # 当前迭代轮次
 """
