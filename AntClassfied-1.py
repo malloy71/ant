@@ -498,8 +498,8 @@ if __name__ == "__main__":
 
 
     r = 2.5
-    # _init_test_data()
-    change_init_test_data()
+    _init_test_data()
+    # change_init_test_data()
     eco_target = [0 for col in range(ITERATE_NUM)]
     for NOW_ITER in range(0, ITERATE_NUM):
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
@@ -516,7 +516,7 @@ if __name__ == "__main__":
         else:
             eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
-    print(eco_target)
+    # print(eco_target)
     plt.figure(figsize=(5, 5), facecolor='w')
     plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
     plt.title("iter and target")

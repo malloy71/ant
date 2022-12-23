@@ -54,11 +54,11 @@ e = [958.957933365048, 856.471299327474, 787.6324025591248, 706.250667779619, 62
 from matplotlib import pyplot as plt
 
 plt.figure(figsize=(10, 10), facecolor='w')
-va, = plt.plot(range(50), a, linewidth=1, color="orange", marker="o", label="ACO", markersize=3)
-vb, = plt.plot(range(50), b, linewidth=1, color="green", marker="o", label="ACO+IDD", markersize=3)
-vc, = plt.plot(range(50), c, linewidth=1, color="blue", marker="o", label="ACO+Global", markersize=3)
-vd, = plt.plot(range(50), d, linewidth=1, color="yellow", marker="o", label="ACO+local", markersize=3)
-ve, = plt.plot(range(50), e, linewidth=1, color="red", marker="*", label="proposed", markersize=3)
+va, = plt.plot(range(50), a, linewidth=3, color="orange", marker="o", label="ACO", markersize=8)
+vb, = plt.plot(range(50), b, linewidth=3, color="green", marker="o", label="ACO+IDD", markersize=8)
+vc, = plt.plot(range(50), c, linewidth=3, color="blue", marker="o", label="ACO+Global", markersize=8)
+vd, = plt.plot(range(50), d, linewidth=3, color="yellow", marker="o", label="ACO+local", markersize=8)
+ve, = plt.plot(range(50), e, linewidth=3, color="red", marker="*", label="proposed", markersize=8)
 plt.legend((va, vb, vc, vd, ve), ('ACO', 'ACO+IDD', 'ACO+Global', 'ACO+local', 'proposed'),loc=1)
 
 plt.title("iter and target")
