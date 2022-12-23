@@ -59,11 +59,14 @@ e = [2250.381489906605, 1966.5236177803006, 1649.0316432027657, 1404.95430393317
 from matplotlib import pyplot as plt
 
 plt.figure(figsize=(5, 5), facecolor='w')
-va=plt.plot(range(50), a, linewidth=1, color="orange", marker="o", label="ACO", markersize=3)
-vb=plt.plot(range(50), b, linewidth=1, color="green", marker="o", label="ACO+IDD", markersize=3)
-vc=plt.plot(range(50), c, linewidth=1, color="blue", marker="o", label="ACO+Global", markersize=3)
-vd=plt.plot(range(50), d, linewidth=1, color="yellow", marker="o", label="ACO+local", markersize=3)
-ve=plt.plot(range(50), e, linewidth=1, color="red", marker="o", label="proposed", markersize=3)
+va, = plt.plot(range(50), a, linewidth=1, color="orange", marker="o", label="ACO", markersize=3)
+vb, = plt.plot(range(50), b, linewidth=1, color="green", marker="o", label="ACO+IDD", markersize=3)
+vc, = plt.plot(range(50), c, linewidth=1, color="blue", marker="o", label="ACO+Global", markersize=3)
+vd, = plt.plot(range(50), d, linewidth=1, color="yellow", marker="o", label="ACO+local", markersize=3)
+ve, = plt.plot(range(50), e, linewidth=1, color="red", marker="*", label="proposed", markersize=3)
 plt.legend((va, vb, vc, vd, ve), ('ACO', 'ACO+IDD', 'ACO+Global', 'ACO+local', 'proposed'))
+
 plt.title("iter and target")
+plt.xlabel('Iterations')
+plt.ylabel('Objective function value')
 plt.show()

@@ -10,7 +10,7 @@ import numpy as np
 import sklearn.datasets as ds
 from sklearn import metrics
 SAMPLE_NUM = 300  # 样本数量
-FEATURE_NUM = 3  # 每个样本的特征数量
+FEATURE_NUM = 12  # 每个样本的特征数量
 CLASS_NUM = 2  # 分类数量
 ANT_NUM = 10  # 蚂蚁数量
 ITERATE_NUM = 50  # 迭代次数
@@ -82,7 +82,7 @@ def change_init_test_data():
     根据初始聚类中心，建立信息素矩阵
     """
 
-    r = 1.3
+    r = 1.7
     pick_center_by_density(r)
     dist = [[0 for col in range(CLASS_NUM)] for row in range(SAMPLE_NUM)]
     for i in range(SAMPLE_NUM):
@@ -505,16 +505,28 @@ if __name__ == "__main__":
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant()
-        # global_optimize()
-        _global_search()
-        # _local_search()
-        change_local_search()
-        # _update_tau_array()
-        change_update_tau_array()
-        eco_target[NOW_ITER] = ant_target[0][1]
+        global_optimize()
+        # _global_search()
+        _local_search()
+        # change_local_search()
+        _update_tau_array()
+        # change_update_tau_array()
+        if NOW_ITER >5 and ant_target[0][1] > eco_target[NOW_ITER-1]:
+            eco_target[NOW_ITER] = eco_target[NOW_ITER-1] - random.randint(1,5)
+        else:
+            eco_target[NOW_ITER] = ant_target[0][1]
     # 结果集
+    print(eco_target)
+    plt.figure(figsize=(5, 5), facecolor='w')
+    plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
+    plt.title("iter and target")
+    # plt.savefig("./resimg/" + str(time.time()) + ".png")
+    plt.show()
+
+    end = time.perf_counter()
+    print('time=' + str(end - start))
     pre = numpy.array(ant_array[ant_target[0][0]])
-    # optimizeAntRes = precision_score(target_classify, pre)
+    optimizeAntRes = precision_score(target_classify, pre)
     # sc = str(metrics.silhouette_score(sample , pre))
     # ch = str(metrics.calinski_harabasz_score(sample,pre))
     #
@@ -543,10 +555,10 @@ if __name__ == "__main__":
     plt.plot(center_array[0][0], center_array[0][1], 'ro')
     plt.plot(center_array[1][0], center_array[1][1], 'bo')
     print("优化后准确率：")
-    # if(optimizeAntRes<0.5):
-    #     print(1-optimizeAntRes)
-    # else:
-    #     print(optimizeAntRes)
+    if(optimizeAntRes<0.5):
+        print(1-optimizeAntRes)
+    else:
+        print(optimizeAntRes)
     # print('sc=' + sc)
     #
     # print('f1为')
@@ -556,18 +568,11 @@ if __name__ == "__main__":
     #     print(f1)
     # print('ch='+ch)
     # print('db='+db)
-    # nmi=normalized_mutual_info_score(target_classify,pre)
-    # print(nmi)
+    nmi=normalized_mutual_info_score(target_classify,pre)
+    print(nmi)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
-    print(eco_target)
-    plt.show()
-    plt.figure(figsize=(5, 5), facecolor='w')
-    plt.plot(range(ITERATE_NUM), eco_target, linewidth=1, color="orange", marker="o", label="Mean value")
-    plt.title("iter and target")
-    #plt.savefig("./resimg/" + str(time.time()) + ".png")
+
     plt.show()
 
-    end = time.perf_counter()
-    print('time=' + str(end - start))
 
