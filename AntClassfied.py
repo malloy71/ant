@@ -13,7 +13,7 @@ import pandas as pd
 from sklearn.metrics import silhouette_score
 from sklearn.metrics import normalized_mutual_info_score
 from sklearn.metrics import f1_score
-SAMPLE_NUM = 300  # 样本数量
+SAMPLE_NUM = 500  # 样本数量
 FEATURE_NUM = 3  # 每个样本的特征数量
 CLASS_NUM = 3  # 分类数量
 ANT_NUM = 20  # 蚂蚁数量
@@ -233,7 +233,7 @@ def cal_dis(param, param1):
     z1 = param[2]
     x2 = param1[0]
     y2 = param1[1]
-    z2 = param[2]
+    z2 = param1[2]
     return math.sqrt(math.pow(x1 - x2, 2) + math.pow(y1 - y2, 2) + math.pow(z1 - z2, 2))
 
 
@@ -677,18 +677,18 @@ def find_target(ant_id):
 from sklearn.metrics import precision_score
 
 if __name__ == "__main__":
-    # change_init_test_data()
-    _init_test_data()
+    change_init_test_data()
+    # _init_test_data()
     eco_target = []
     for NOW_ITER in range(1, ITERATE_NUM):
         ant_target.sort(key=lambda x: x[1])
         print("iterate No. {} target {}".format(NOW_ITER, ant_target[0][1]))
 
         _update_ant_target()
-        global_optimize()
-        # _global_search()
-        _local_search()
-        # change_local_search()
+        # global_optimize()
+        _global_search()
+        # _local_search()
+        change_local_search()
 
         update_ant_center()
         change_update_tau_array()
@@ -770,7 +770,7 @@ if __name__ == "__main__":
     nmi=normalized_mutual_info_score(target_classify,res)
     sc=silhouette_score(sample,res)
     print(nmi)
-    print(sc)
+    # print(sc)
     # tmp_case, temp_target = ds.make_blobs(250, n_features=2, centers=2, random_state=30)
     #
     # # kmeans
